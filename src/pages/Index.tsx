@@ -33,6 +33,9 @@ const Index = () => {
       const response = await login({ email, password });
       
       if (response.user) {
+        localStorage.setItem('clinicUser', JSON.stringify(response.user));
+        localStorage.setItem('clinicToken', response.token);
+        
         toast.success('Giriş başarılı');
         navigate('/dashboard');
       } else {

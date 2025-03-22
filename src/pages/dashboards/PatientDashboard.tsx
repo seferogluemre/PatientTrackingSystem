@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { 
   CalendarDays,
   Clock,
@@ -32,11 +32,7 @@ import {
 import AppointmentCard from '@/components/ui-custom/AppointmentCard';
 import StatsCard from '@/components/ui-custom/StatsCard';
 import { User, Appointment, Patient, AppointmentStatus, Examination } from '@/types';
-import { 
-  mockAppointments,
-  mockPatients,
-  getPatientAppointments,
-} from '@/data/mockData';
+import { getPatientAppointments } from '@/services/appointmentService';
 
 interface PatientDashboardProps {
   user: User;
@@ -44,48 +40,48 @@ interface PatientDashboardProps {
 
 const PatientDashboard = ({ user }: PatientDashboardProps) => {
   const navigate = useNavigate();
-  const [patientId, setPatientId] = useState<number | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [pastAppointments, setPastAppointments] = useState<Appointment[]>([]);
   const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    if (user) {
-      // Kullanıcı email'ine göre hasta bilgisini al
-      const patientInfo = mockPatients.find(p => p.email === user.email);
-      
-      if (patientInfo) {
-        setPatientId(patientInfo.id);
-        
-        // Hastanın randevularını al
-        const patientAppointments = getPatientAppointments(patientInfo.id);
-        
-        setAppointments(patientAppointments);
-        
-        // Bugünün tarihi
-        const today = new Date();
-        
-        // Gelecek randevular
-        const upcoming = patientAppointments
-          .filter(appt => new Date(appt.appointmentDate) >= today)
-          .sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime());
-        
-        setUpcomingAppointments(upcoming);
-        
-        // Bir sonraki randevu
-        if (upcoming.length > 0) {
-          setNextAppointment(upcoming[0]);
+    const fetchAppointments = async () => {
+      if (user && user.id) {
+        setLoading(true);
+        try {
+          const patientAppointments = await getPatientAppointments(user.id);
+          
+          setAppointments(patientAppointments);
+          
+          const today = new Date();
+          
+          const upcoming = patientAppointments
+            .filter(appt => new Date(appt.appointmentDate) >= today)
+            .sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime());
+          
+          setUpcomingAppointments(upcoming);
+          
+          if (upcoming.length > 0) {
+            setNextAppointment(upcoming[0]);
+          }
+          
+          const past = patientAppointments
+            .filter(appt => new Date(appt.appointmentDate) < today || appt.status === 'completed')
+            .sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
+          
+          setPastAppointments(past);
+        } catch (error) {
+          console.error("Randevular yüklenirken hata oluştu:", error);
+          toast.error("Randevular yüklenirken bir hata oluştu");
+        } finally {
+          setLoading(false);
         }
-        
-        // Geçmiş randevular
-        const past = patientAppointments
-          .filter(appt => new Date(appt.appointmentDate) < today || appt.status === 'completed')
-          .sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
-        
-        setPastAppointments(past);
       }
-    }
+    };
+
+    fetchAppointments();
   }, [user]);
   
   const container = {
@@ -109,6 +105,14 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
     },
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-pulse text-lg">Randevular yükleniyor...</div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       variants={container}
@@ -130,7 +134,6 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
         </Button>
       </motion.div>
       
-      {/* İstatistikler */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatsCard
           title="Toplam Randevu"
@@ -150,11 +153,8 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
         />
       </motion.div>
       
-      {/* Ana içerik */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Sol kolon */}
         <motion.div variants={item} className="lg:col-span-2 space-y-6">
-          {/* Sonraki randevu */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle>Sonraki Randevunuz</CardTitle>
@@ -216,7 +216,6 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
             </CardContent>
           </Card>
           
-          {/* Randevu geçmişi ve yaklaşan randevular */}
           <Card>
             <CardHeader>
               <CardTitle>Randevu Durumunuz</CardTitle>
@@ -337,9 +336,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
           </Card>
         </motion.div>
         
-        {/* Sağ kolon */}
         <motion.div variants={item} className="space-y-6">
-          {/* Son Muayeneler */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle>Son Muayeneleriniz</CardTitle>
@@ -402,7 +399,6 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
             </CardFooter>
           </Card>
           
-          {/* Kişisel Bilgiler */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle>Kişisel Bilgileriniz</CardTitle>

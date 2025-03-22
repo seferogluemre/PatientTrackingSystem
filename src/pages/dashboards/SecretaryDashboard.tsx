@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { 
   CalendarDays, 
   Clock,
@@ -29,10 +29,10 @@ import AppointmentCard from '@/components/ui-custom/AppointmentCard';
 import StatsCard from '@/components/ui-custom/StatsCard';
 import PatientCard from '@/components/ui-custom/PatientCard';
 import { User, Appointment, Patient, AppointmentStatus } from '@/types';
+import { getAllAppointments, editAppointment } from '@/services/appointmentService';
 import { 
   mockStatsData, 
-  mockAppointments, 
-  mockPatients, 
+  mockPatients,
 } from '@/data/mockData';
 
 interface SecretaryDashboardProps {
@@ -44,42 +44,65 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [recentPatients, setRecentPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    if (user) {
-      // Tüm randevuları yükleme
-      setAppointments(mockAppointments);
-      
-      // Bugünkü randevuları filtreleme
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      
-      const todayAppts = mockAppointments.filter(appointment => {
-        const apptDate = new Date(appointment.appointmentDate);
-        return apptDate >= today && apptDate < tomorrow;
-      });
-      
-      setTodayAppointments(todayAppts);
-      
-      // Son hastaları listeleme
-      setRecentPatients(mockPatients.slice(0, 4));
-    }
+    const fetchSecretaryData = async () => {
+      setLoading(true);
+      try {
+        // Tüm randevuları getir
+        const appointmentsData = await getAllAppointments();
+        
+        setAppointments(appointmentsData);
+        
+        // Bugünkü randevuları filtreleme
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const todayAppts = appointmentsData.filter((appointment: Appointment) => {
+          const apptDate = new Date(appointment.appointmentDate);
+          return apptDate >= today && apptDate < tomorrow;
+        });
+        
+        setTodayAppointments(todayAppts);
+        
+        // Son hastaları listeleme (şimdilik mock data)
+        setRecentPatients(mockPatients.slice(0, 4));
+      } catch (error) {
+        console.error("Sekreter verileri yüklenirken hata oluştu:", error);
+        toast.error("Veriler yüklenirken bir hata oluştu");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSecretaryData();
   }, [user]);
   
-  const handleStatusChange = (id: number, status: AppointmentStatus) => {
-    // Randevu durumunu güncelleme
-    const updatedAppointments = appointments.map(appointment => 
-      appointment.id === id ? { ...appointment, status } : appointment
-    );
-    
-    const updatedTodayAppointments = todayAppointments.map(appointment => 
-      appointment.id === id ? { ...appointment, status } : appointment
-    );
-    
-    setAppointments(updatedAppointments);
-    setTodayAppointments(updatedTodayAppointments);
+  const handleStatusChange = async (id: number, status: AppointmentStatus) => {
+    try {
+      // API'ye durum güncellemesi gönder
+      await editAppointment(id, { status });
+      
+      // UI'ı güncelle
+      const updatedAppointments = appointments.map(appointment => 
+        appointment.id === id ? { ...appointment, status } : appointment
+      );
+      
+      const updatedTodayAppointments = todayAppointments.map(appointment => 
+        appointment.id === id ? { ...appointment, status } : appointment
+      );
+      
+      setAppointments(updatedAppointments);
+      setTodayAppointments(updatedTodayAppointments);
+      
+      toast.success(`Randevu durumu ${status === 'completed' ? 'tamamlandı' : status === 'cancelled' ? 'iptal edildi' : status} olarak güncellendi`);
+    } catch (error) {
+      console.error("Randevu durumu güncellenirken hata:", error);
+      toast.error("Randevu durumu güncellenirken bir hata oluştu");
+    }
   };
   
   const container = {
@@ -102,6 +125,14 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
       },
     },
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-pulse text-lg">Veriler yükleniyor...</div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -140,7 +171,7 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
         />
         <StatsCard
           title="Toplam Randevu"
-          value={mockStatsData.totalAppointments}
+          value={appointments.length}
           icon={<CalendarDays className="h-5 w-5" />}
         />
         <StatsCard

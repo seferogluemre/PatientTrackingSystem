@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { 
   CalendarDays, 
   Clock,
@@ -27,12 +27,11 @@ import AppointmentCard from '@/components/ui-custom/AppointmentCard';
 import StatsCard from '@/components/ui-custom/StatsCard';
 import PatientCard from '@/components/ui-custom/PatientCard';
 import { User, Appointment, Patient, AppointmentStatus, Doctor } from '@/types';
+import { getAllAppointments, editAppointment } from '@/services/appointmentService';
 import { 
   mockStatsData, 
-  mockAppointments, 
   mockPatients, 
   getDoctorByUserId,
-  getDoctorAppointments,
 } from '@/data/mockData';
 
 interface DoctorDashboardProps {
@@ -45,55 +44,86 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
   const [recentAppointments, setRecentAppointments] = useState<Appointment[]>([]);
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [recentPatients, setRecentPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    if (user) {
-      const doctorInfo = getDoctorByUserId(user.id);
-      if (doctorInfo) {
-        setDoctor(doctorInfo);
-        
-        // Doktorun randevularını al
-        const appointments = getDoctorAppointments(doctorInfo.id);
-        
-        // Sort appointments by date (newest first)
-        appointments.sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
-        
-        // Recent appointments (last 5)
-        setRecentAppointments(appointments.slice(0, 5));
-        
-        // Today's appointments
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        const todayAppts = appointments.filter(appointment => {
-          const apptDate = new Date(appointment.appointmentDate);
-          return apptDate >= today && apptDate < tomorrow;
-        });
-        
-        setTodayAppointments(todayAppts);
-        
-        // Son hastaları al (doktorun hastalarını)
-        const patientIds = new Set(appointments.map(appt => appt.patientId));
-        const doctorPatients = mockPatients.filter(patient => patientIds.has(patient.id));
-        setRecentPatients(doctorPatients.slice(0, 4));
+    const fetchDoctorData = async () => {
+      if (user) {
+        setLoading(true);
+        try {
+          // Şimdilik mock data kullanıyoruz, backend hazır olduğunda gerçek API'ye bağlanacak
+          const doctorInfo = getDoctorByUserId(user.id);
+          if (doctorInfo) {
+            setDoctor(doctorInfo);
+            
+            // Tüm randevuları getir
+            const appointmentsData = await getAllAppointments();
+            
+            // Doktorun randevularını filtrele
+            const doctorAppointments = appointmentsData.filter(
+              (appointment: Appointment) => appointment.doctorId === doctorInfo.id
+            );
+            
+            // Sort appointments by date (newest first)
+            doctorAppointments.sort((a: Appointment, b: Appointment) => 
+              new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime()
+            );
+            
+            // Recent appointments (last 5)
+            setRecentAppointments(doctorAppointments.slice(0, 5));
+            
+            // Today's appointments
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            const todayAppts = doctorAppointments.filter((appointment: Appointment) => {
+              const apptDate = new Date(appointment.appointmentDate);
+              return apptDate >= today && apptDate < tomorrow;
+            });
+            
+            setTodayAppointments(todayAppts);
+            
+            // Son hastaları al (doktorun hastalarını)
+            const patientIds = new Set(doctorAppointments.map((appt: Appointment) => appt.patientId));
+            const doctorPatients = mockPatients.filter(patient => patientIds.has(patient.id));
+            setRecentPatients(doctorPatients.slice(0, 4));
+          }
+        } catch (error) {
+          console.error("Doktor verileri yüklenirken hata oluştu:", error);
+          toast.error("Veriler yüklenirken bir hata oluştu");
+        } finally {
+          setLoading(false);
+        }
       }
-    }
+    };
+
+    fetchDoctorData();
   }, [user]);
   
-  const handleStatusChange = (id: number, status: AppointmentStatus) => {
-    // Update the status in both recent and today's appointments
-    const updatedRecent = recentAppointments.map(appointment => 
-      appointment.id === id ? { ...appointment, status } : appointment
-    );
-    
-    const updatedToday = todayAppointments.map(appointment => 
-      appointment.id === id ? { ...appointment, status } : appointment
-    );
-    
-    setRecentAppointments(updatedRecent);
-    setTodayAppointments(updatedToday);
+  const handleStatusChange = async (id: number, status: AppointmentStatus) => {
+    try {
+      // API'ye durum güncellemesi gönder
+      await editAppointment(id, { status });
+      
+      // UI'ı güncelle
+      const updatedRecent = recentAppointments.map(appointment => 
+        appointment.id === id ? { ...appointment, status } : appointment
+      );
+      
+      const updatedToday = todayAppointments.map(appointment => 
+        appointment.id === id ? { ...appointment, status } : appointment
+      );
+      
+      setRecentAppointments(updatedRecent);
+      setTodayAppointments(updatedToday);
+      
+      toast.success(`Randevu durumu ${status === 'completed' ? 'tamamlandı' : status} olarak güncellendi`);
+    } catch (error) {
+      console.error("Randevu durumu güncellenirken hata:", error);
+      toast.error("Randevu durumu güncellenirken bir hata oluştu");
+    }
   };
   
   const container = {
@@ -116,6 +146,14 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
       },
     },
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-pulse text-lg">Veriler yükleniyor...</div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -142,7 +180,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Toplam Hasta"
-          value={doctor?.id ? mockStatsData.totalPatients / 2 : 0}
+          value={doctor?.id ? recentPatients.length : 0}
           icon={<Users className="h-5 w-5" />}
           trend={{ value: 12, isPositive: true }}
         />
