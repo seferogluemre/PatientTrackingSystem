@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 
-// API base URL'yi tanımlayalım - development için
+// API base URL'yi tanımlayalım - localhost:3000 için
 const API_URL = 'http://localhost:3000/api';
 
 // Axios instance oluşturalım

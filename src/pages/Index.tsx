@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -31,12 +30,9 @@ const Index = () => {
     setLoading(true);
 
     try {
-      // Gerçek API yerine mock veri kullanıyoruz
-      // İleriki aşamada bu kısım services/authService.ts içindeki login fonksiyonu ile değiştirilecek
-      const user = getRandomUser(role);
+      const response = await login({ email, password });
       
-      if (user) {
-        localStorage.setItem('clinicUser', JSON.stringify(user));
+      if (response.user) {
         toast.success('Giriş başarılı');
         navigate('/dashboard');
       } else {
@@ -54,7 +50,6 @@ const Index = () => {
     setLoading(true);
 
     try {
-      // Demo amaçlı hızlı giriş
       const user = getRandomUser(selectedRole);
       
       if (user) {
@@ -88,7 +83,6 @@ const Index = () => {
   return (
     <Layout requireAuth={false}>
       <div className="min-h-[calc(100vh-8rem)] flex flex-col md:flex-row">
-        {/* Left side - form */}
         <motion.div 
           className="w-full md:w-1/2 flex items-center justify-center p-8"
           initial={{ opacity: 0 }}
@@ -222,7 +216,6 @@ const Index = () => {
           </div>
         </motion.div>
 
-        {/* Right side - hero image/description */}
         <motion.div 
           className="w-full md:w-1/2 bg-clinic/5 flex items-center justify-center p-8"
           initial={{ opacity: 0, x: 20 }}
