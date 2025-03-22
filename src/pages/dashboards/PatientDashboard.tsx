@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -9,7 +10,6 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  ChevronRight,
   Stethoscope,
   FileText,
   PlusCircle,
@@ -32,10 +32,50 @@ import {
 import AppointmentCard from '@/components/ui-custom/AppointmentCard';
 import StatsCard from '@/components/ui-custom/StatsCard';
 import { User, Appointment, Patient, AppointmentStatus, Examination } from '@/types';
-import { getPatientAppointments } from '@/services/appointmentService';
 
 interface PatientDashboardProps {
   user: User;
+}
+
+interface ApiAppointment {
+  id: number;
+  patient_id: number;
+  doctor_id: number;
+  appointment_date: string;
+  status: AppointmentStatus;
+  description: string;
+  completed_at?: string;
+  secretaryId?: number;
+  patient?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    tc_no: string;
+  };
+  doctor?: {
+    id: number;
+    specialty: string;
+    clinic_id: number;
+    tc_no: string;
+    first_name?: string;
+    last_name?: string;
+  };
+  examination?: {
+    id: number;
+    diagnosis: string;
+    treatment: string;
+    notes?: string;
+  };
+}
+
+interface ApiPatientData {
+  email: string;
+  first_name: string;
+  tc_no: string;
+  appointments: ApiAppointment[];
+  last_name: string;
+  id: number;
 }
 
 const PatientDashboard = ({ user }: PatientDashboardProps) => {
@@ -51,27 +91,112 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
       if (user && user.id) {
         setLoading(true);
         try {
-          const patientAppointments = await getPatientAppointments(user.id);
+          // Fetch patient profile with appointments
+          const response = await fetch(`http://localhost:3000/api/appointments/patient/${user.id}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('clinicToken')}`
+            }
+          });
           
-          setAppointments(patientAppointments);
-          
-          const today = new Date();
-          
-          const upcoming = patientAppointments
-            .filter(appt => new Date(appt.appointmentDate) >= today)
-            .sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime());
-          
-          setUpcomingAppointments(upcoming);
-          
-          if (upcoming.length > 0) {
-            setNextAppointment(upcoming[0]);
+          if (!response.ok) {
+            throw new Error('Failed to fetch patient appointments');
           }
           
-          const past = patientAppointments
-            .filter(appt => new Date(appt.appointmentDate) < today || appt.status === 'completed')
-            .sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
+          const data = await response.json();
           
-          setPastAppointments(past);
+          if (data && data.results) {
+            // Convert API appointments to our app's Appointment type
+            const formattedAppointments: Appointment[] = await Promise.all(
+              data.results.map(async (appt: ApiAppointment) => {
+                let doctorInfo = appt.doctor || {
+                  id: appt.doctor_id,
+                  specialty: '',
+                  clinic_id: 0,
+                  tc_no: ''
+                };
+                
+                // If doctor details missing, try to fetch them
+                if (!doctorInfo.first_name && appt.doctor_id) {
+                  try {
+                    const doctorResponse = await fetch(`http://localhost:3000/api/users/doctor/${appt.doctor_id}`);
+                    if (doctorResponse.ok) {
+                      const doctorData = await doctorResponse.json();
+                      if (doctorData.results && doctorData.results.length > 0) {
+                        doctorInfo = {
+                          ...doctorInfo,
+                          ...doctorData.results[0]
+                        };
+                      }
+                    }
+                  } catch (error) {
+                    console.error('Error fetching doctor details:', error);
+                  }
+                }
+                
+                return {
+                  id: appt.id,
+                  patientId: appt.patient_id,
+                  doctorId: appt.doctor_id,
+                  appointmentDate: new Date(appt.appointment_date),
+                  status: appt.status,
+                  description: appt.description,
+                  patient: {
+                    id: user.id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    email: user.email,
+                    dob: new Date(),
+                    phone: user.phone || '',
+                    address: ''
+                  },
+                  doctor: {
+                    id: doctorInfo.id,
+                    userId: 0,
+                    specialty: doctorInfo.specialty,
+                    clinicId: doctorInfo.clinic_id,
+                    user: {
+                      id: doctorInfo.id,
+                      firstName: doctorInfo.first_name || '',
+                      lastName: doctorInfo.last_name || '',
+                      email: '',
+                      role: 'doctor'
+                    }
+                  },
+                  examination: appt.examination ? {
+                    id: appt.examination.id,
+                    appointmentId: appt.id,
+                    diagnosis: appt.examination.diagnosis,
+                    treatment: appt.examination.treatment,
+                    notes: appt.examination.notes
+                  } : undefined
+                };
+              })
+            );
+            
+            setAppointments(formattedAppointments);
+            
+            const today = new Date();
+            
+            const upcoming = formattedAppointments
+              .filter(appt => new Date(appt.appointmentDate) >= today && appt.status === 'pending')
+              .sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime());
+            
+            setUpcomingAppointments(upcoming);
+            
+            if (upcoming.length > 0) {
+              setNextAppointment(upcoming[0]);
+            }
+            
+            const past = formattedAppointments
+              .filter(appt => new Date(appt.appointmentDate) < today || appt.status === 'completed' || appt.status === 'cancelled')
+              .sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
+            
+            setPastAppointments(past);
+          } else {
+            setAppointments([]);
+            setUpcomingAppointments([]);
+            setPastAppointments([]);
+          }
         } catch (error) {
           console.error("Randevular yüklenirken hata oluştu:", error);
           toast.error("Randevular yüklenirken bir hata oluştu");

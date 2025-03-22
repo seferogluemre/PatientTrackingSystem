@@ -13,7 +13,6 @@ import {
   XCircle,
   Clock,
   Filter,
-  ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +30,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,26 +37,51 @@ import Layout from '@/components/ui-custom/Layout';
 import AppointmentCard from '@/components/ui-custom/AppointmentCard';
 import { User, Appointment, AppointmentStatus, Doctor, Patient } from '@/types';
 import { 
-  mockAppointments, 
-  mockDoctors, 
-  mockPatients, 
-  getDoctorByUserId,
-  getPatientAppointments,
-  getDoctorAppointments,
-} from '@/data/mockData';
+  getAllAppointments, 
+  getPatientAppointments, 
+  addAppointment 
+} from '@/services/appointmentService';
+import { getUser } from '@/services/userService';
 
 type FilterStatus = 'all' | AppointmentStatus;
+
+interface ApiAppointment {
+  id: number;
+  patient_id: number;
+  doctor_id: number;
+  appointment_date: string;
+  status: AppointmentStatus;
+  description: string;
+  completed_at?: string;
+  secretaryId?: number;
+  patient?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    tc_no: string;
+  };
+  doctor?: {
+    id: number;
+    specialty: string;
+    clinic_id: number;
+    tc_no: string;
+  };
+}
 
 const Appointments = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
-  const [doctor, setDoctor] = useState<Doctor | null>(null);
+  const [doctorInfo, setDoctorInfo] = useState<Doctor | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   
   // Form state for new appointment
   const [formData, setFormData] = useState({
@@ -87,42 +110,159 @@ const Appointments = () => {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
       
-      if (parsedUser.role === 'doctor') {
-        const doctorInfo = getDoctorByUserId(parsedUser.id);
-        if (doctorInfo) {
-          setDoctor(doctorInfo);
-        }
-      }
+      // Fetch doctors and patients for dropdown
+      fetchDoctorsAndPatients();
     } else {
       navigate('/');
     }
   }, [navigate]);
   
-  // Get appointments based on user role
-  useEffect(() => {
-    if (user) {
-      let userAppointments: Appointment[] = [];
-      
-      if (user.role === 'doctor' && doctor) {
-        userAppointments = getDoctorAppointments(doctor.id);
-      } else if (user.role === 'patient') {
-        const patientWithSameEmail = mockPatients.find(p => p.email === user.email);
-        if (patientWithSameEmail) {
-          userAppointments = getPatientAppointments(patientWithSameEmail.id);
-        }
-      } else if (user.role === 'secretary') {
-        userAppointments = [...mockAppointments];
+  const fetchDoctorsAndPatients = async () => {
+    try {
+      // Fetch available doctors and patients for dropdowns
+      const response = await fetch('http://localhost:3000/api/users/patients');
+      const data = await response.json();
+      if (data.results) {
+        const patientList = data.results.map((p: any) => ({
+          id: p.id,
+          firstName: p.first_name,
+          lastName: p.last_name,
+          email: p.email,
+          dob: new Date(),
+          phone: p.phone || '',
+          address: p.address || ''
+        }));
+        setPatients(patientList);
       }
       
-      // Sort appointments by date (latest first)
-      userAppointments.sort((a, b) => 
-        new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime()
-      );
-      
-      setAppointments(userAppointments);
-      setFilteredAppointments(userAppointments);
+      // Fetch doctors
+      const doctorsResponse = await fetch('http://localhost:3000/api/users/doctors');
+      const doctorsData = await doctorsResponse.json();
+      if (doctorsData.results) {
+        const doctorsList = doctorsData.results.map((d: any) => ({
+          id: d.id,
+          userId: d.user_id || 0,
+          specialty: d.specialty,
+          clinicId: d.clinic_id,
+          user: {
+            id: d.user_id || 0,
+            firstName: d.first_name,
+            lastName: d.last_name,
+            email: d.email || '',
+            role: 'doctor'
+          }
+        }));
+        setDoctors(doctorsList);
+      }
+    } catch (error) {
+      console.error('Error fetching doctors and patients:', error);
+      toast.error('Doktor ve hasta bilgileri yüklenirken hata oluştu');
     }
-  }, [user, doctor, navigate]);
+  };
+  
+  // Get appointments based on user role
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (!user) return;
+      
+      setLoading(true);
+      try {
+        let appointmentsData;
+        
+        if (user.role === 'doctor') {
+          // Fetch doctor's appointments
+          const response = await fetch(`http://localhost:3000/api/appointments/doctor/${user.id}`);
+          appointmentsData = await response.json();
+        } else if (user.role === 'patient') {
+          // Fetch patient's appointments
+          const response = await fetch(`http://localhost:3000/api/appointments/patient/${user.id}`);
+          appointmentsData = await response.json();
+        } else if (user.role === 'secretary') {
+          // Fetch all appointments
+          const response = await fetch('http://localhost:3000/api/appointments');
+          appointmentsData = await response.json();
+        }
+        
+        if (appointmentsData && appointmentsData.results) {
+          const formattedAppointments = appointmentsData.results.map((appointment: ApiAppointment) => ({
+            id: appointment.id,
+            patientId: appointment.patient_id,
+            doctorId: appointment.doctor_id,
+            appointmentDate: new Date(appointment.appointment_date),
+            status: appointment.status,
+            description: appointment.description,
+            patient: appointment.patient ? {
+              id: appointment.patient.id,
+              firstName: appointment.patient.first_name,
+              lastName: appointment.patient.last_name,
+              email: appointment.patient.email,
+              dob: new Date(),
+              phone: '',
+              address: ''
+            } : undefined,
+            doctor: appointment.doctor ? {
+              id: appointment.doctor.id,
+              userId: 0,
+              specialty: appointment.doctor.specialty,
+              clinicId: appointment.doctor.clinic_id,
+              user: {
+                id: 0,
+                firstName: '',
+                lastName: '',
+                email: '',
+                role: 'doctor'
+              }
+            } : undefined
+          }));
+          
+          // Try to fetch additional doctor information if needed
+          for (let i = 0; i < formattedAppointments.length; i++) {
+            if (formattedAppointments[i].doctor && !formattedAppointments[i].doctor.user?.firstName) {
+              try {
+                const doctorResponse = await fetch(`http://localhost:3000/api/users/doctor/${formattedAppointments[i].doctorId}`);
+                const doctorData = await doctorResponse.json();
+                if (doctorData.results && doctorData.results.length > 0) {
+                  const doctor = doctorData.results[0];
+                  formattedAppointments[i].doctor = {
+                    ...formattedAppointments[i].doctor!,
+                    user: {
+                      id: doctor.id || 0,
+                      firstName: doctor.first_name || '',
+                      lastName: doctor.last_name || '',
+                      email: doctor.email || '',
+                      role: 'doctor'
+                    }
+                  };
+                }
+              } catch (error) {
+                console.error('Error fetching doctor details:', error);
+              }
+            }
+          }
+          
+          // Sort appointments by date (latest first)
+          formattedAppointments.sort((a, b) => 
+            new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime()
+          );
+          
+          setAppointments(formattedAppointments);
+          setFilteredAppointments(formattedAppointments);
+        } else {
+          setAppointments([]);
+          setFilteredAppointments([]);
+        }
+      } catch (error) {
+        console.error('Error fetching appointments:', error);
+        toast.error('Randevular yüklenirken bir hata oluştu');
+        setAppointments([]);
+        setFilteredAppointments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAppointments();
+  }, [user]);
   
   // Filter appointments based on search query and status filter
   useEffect(() => {
@@ -156,18 +296,35 @@ const Appointments = () => {
     }
   }, [appointments, searchQuery, statusFilter]);
   
-  const handleStatusChange = (id: number, status: AppointmentStatus) => {
-    // Update the status in both appointments and filtered appointments
-    const updatedAppointments = appointments.map(appointment => 
-      appointment.id === id ? { ...appointment, status } : appointment
-    );
-    
-    const updatedFiltered = filteredAppointments.map(appointment => 
-      appointment.id === id ? { ...appointment, status } : appointment
-    );
-    
-    setAppointments(updatedAppointments);
-    setFilteredAppointments(updatedFiltered);
+  const handleStatusChange = async (id: number, status: AppointmentStatus) => {
+    try {
+      // Call the API to update appointment status
+      await fetch(`http://localhost:3000/api/appointments/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('clinicToken')}`
+        },
+        body: JSON.stringify({ status })
+      });
+      
+      // Update the local state
+      const updatedAppointments = appointments.map(appointment => 
+        appointment.id === id ? { ...appointment, status } : appointment
+      );
+      
+      const updatedFiltered = filteredAppointments.map(appointment => 
+        appointment.id === id ? { ...appointment, status } : appointment
+      );
+      
+      setAppointments(updatedAppointments);
+      setFilteredAppointments(updatedFiltered);
+      
+      toast.success(`Randevu durumu başarıyla ${status === 'completed' ? 'tamamlandı' : 'iptal edildi'}`);
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+      toast.error('Randevu durumu güncellenirken bir hata oluştu');
+    }
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -175,7 +332,7 @@ const Appointments = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleCreateAppointment = () => {
+  const handleCreateAppointment = async () => {
     // Validate form
     if (!formData.patientId || !formData.doctorId || !formData.appointmentDate || !formData.appointmentTime) {
       toast.error('Lütfen tüm gerekli alanları doldurun');
@@ -185,37 +342,69 @@ const Appointments = () => {
     // Combine date and time
     const dateTime = new Date(`${formData.appointmentDate}T${formData.appointmentTime}`);
     
-    // Create a new appointment
-    const newAppointment: Appointment = {
-      id: appointments.length + 1,
-      patientId: parseInt(formData.patientId),
-      doctorId: parseInt(formData.doctorId),
-      appointmentDate: dateTime,
-      status: 'pending',
-      description: formData.description,
-      patient: mockPatients.find(p => p.id === parseInt(formData.patientId)),
-      doctor: mockDoctors.find(d => d.id === parseInt(formData.doctorId)),
-    };
-    
-    // Add to appointments and filtered appointments
-    setAppointments([newAppointment, ...appointments]);
-    
-    // Apply current filters to the new appointment
-    if (statusFilter === 'all' || statusFilter === 'pending') {
-      setFilteredAppointments([newAppointment, ...filteredAppointments]);
+    try {
+      // Call the API to create appointment
+      const response = await fetch('http://localhost:3000/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('clinicToken')}`
+        },
+        body: JSON.stringify({
+          patient_id: parseInt(formData.patientId),
+          doctor_id: parseInt(formData.doctorId),
+          date: dateTime.toISOString(),
+          status: 'pending',
+          description: formData.description,
+          secretary_id: user?.role === 'secretary' ? user.id : undefined
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create appointment');
+      }
+      
+      const newAppointmentData = await response.json();
+      
+      // Find the patient and doctor objects for the new appointment
+      const patient = patients.find(p => p.id === parseInt(formData.patientId));
+      const doctor = doctors.find(d => d.id === parseInt(formData.doctorId));
+      
+      // Create a new appointment object with the returned data
+      const newAppointment: Appointment = {
+        id: newAppointmentData.id || appointments.length + 1,
+        patientId: parseInt(formData.patientId),
+        doctorId: parseInt(formData.doctorId),
+        appointmentDate: dateTime,
+        status: 'pending',
+        description: formData.description,
+        patient: patient,
+        doctor: doctor,
+      };
+      
+      // Add to appointments and filtered appointments
+      setAppointments([newAppointment, ...appointments]);
+      
+      // Apply current filters to the new appointment
+      if (statusFilter === 'all' || statusFilter === 'pending') {
+        setFilteredAppointments([newAppointment, ...filteredAppointments]);
+      }
+      
+      // Close dialog and reset form
+      setIsCreateDialogOpen(false);
+      setFormData({
+        patientId: '',
+        doctorId: '',
+        appointmentDate: '',
+        appointmentTime: '',
+        description: '',
+      });
+      
+      toast.success('Randevu başarıyla oluşturuldu');
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      toast.error('Randevu oluşturulurken bir hata oluştu');
     }
-    
-    // Close dialog and reset form
-    setIsCreateDialogOpen(false);
-    setFormData({
-      patientId: '',
-      doctorId: '',
-      appointmentDate: '',
-      appointmentTime: '',
-      description: '',
-    });
-    
-    toast.success('Randevu başarıyla oluşturuldu');
   };
   
   // Calculate stats
@@ -347,28 +536,35 @@ const Appointments = () => {
           </div>
         </motion.div>
         
-        {/* Appointments list */}
-        {filteredAppointments.length > 0 ? (
-          <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAppointments.map((appointment) => (
-              <AppointmentCard
-                key={appointment.id}
-                appointment={appointment}
-                userRole={user.role}
-                onStatusChange={handleStatusChange}
-              />
-            ))}
+        {/* Loading indicator */}
+        {loading ? (
+          <motion.div variants={item} className="flex justify-center py-12">
+            <div className="animate-pulse text-lg">Randevular yükleniyor...</div>
           </motion.div>
         ) : (
-          <motion.div variants={item} className="text-center py-12">
-            <Calendar className="mx-auto h-12 w-12 text-slate-300" />
-            <h3 className="mt-2 text-lg font-medium">Randevu bulunamadı</h3>
-            <p className="text-sm text-slate-500 mt-1">
-              {searchQuery || statusFilter !== 'all' ? 
-                'Filtreleme kriterlerinize uygun randevu bulunamadı.' : 
-                'Henüz randevu oluşturulmamış.'}
-            </p>
-          </motion.div>
+          // Appointments list
+          filteredAppointments.length > 0 ? (
+            <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredAppointments.map((appointment) => (
+                <AppointmentCard
+                  key={appointment.id}
+                  appointment={appointment}
+                  userRole={user.role}
+                  onStatusChange={handleStatusChange}
+                />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div variants={item} className="text-center py-12">
+              <Calendar className="mx-auto h-12 w-12 text-slate-300" />
+              <h3 className="mt-2 text-lg font-medium">Randevu bulunamadı</h3>
+              <p className="text-sm text-slate-500 mt-1">
+                {searchQuery || statusFilter !== 'all' ? 
+                  'Filtreleme kriterlerinize uygun randevu bulunamadı.' : 
+                  'Henüz randevu oluşturulmamış.'}
+              </p>
+            </motion.div>
+          )
         )}
       </motion.div>
       
@@ -393,7 +589,7 @@ const Appointments = () => {
                     <SelectValue placeholder="Hasta seçin" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockPatients.map((patient) => (
+                    {patients.map((patient) => (
                       <SelectItem key={patient.id} value={patient.id.toString()}>
                         {patient.firstName} {patient.lastName}
                       </SelectItem>
@@ -413,7 +609,7 @@ const Appointments = () => {
                     <SelectValue placeholder="Doktor seçin" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockDoctors.map((doctor) => (
+                    {doctors.map((doctor) => (
                       <SelectItem key={doctor.id} value={doctor.id.toString()}>
                         Dr. {doctor.user?.firstName} {doctor.user?.lastName} ({doctor.specialty})
                       </SelectItem>
