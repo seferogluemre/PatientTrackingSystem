@@ -34,6 +34,7 @@ const Dashboard = () => {
   }
 
   if (!user) {
+    // Return null
     return null;
   }
 
