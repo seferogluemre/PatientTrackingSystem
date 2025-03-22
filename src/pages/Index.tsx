@@ -17,6 +17,7 @@ import {
 import Layout from '@/components/ui-custom/Layout';
 import { getRandomUser } from '@/data/mockData';
 import { UserRole } from '@/types';
+import { login } from '@/services/authService';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -25,12 +26,13 @@ const Index = () => {
   const [role, setRole] = useState<UserRole>('doctor');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulating API call delay
-    setTimeout(() => {
+    try {
+      // Gerçek API yerine mock veri kullanıyoruz
+      // İleriki aşamada bu kısım services/authService.ts içindeki login fonksiyonu ile değiştirilecek
       const user = getRandomUser(role);
       
       if (user) {
@@ -40,16 +42,19 @@ const Index = () => {
       } else {
         toast.error('Giriş başarısız');
       }
-      
+    } catch (error) {
+      toast.error('Giriş sırasında bir hata oluştu');
+      console.error(error);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleQuickLogin = (selectedRole: UserRole) => {
     setLoading(true);
 
-    // Simulating API call delay
-    setTimeout(() => {
+    try {
+      // Demo amaçlı hızlı giriş
       const user = getRandomUser(selectedRole);
       
       if (user) {
@@ -59,9 +64,12 @@ const Index = () => {
       } else {
         toast.error('Giriş başarısız');
       }
-      
+    } catch (error) {
+      toast.error('Giriş sırasında bir hata oluştu');
+      console.error(error);
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const fadeInUp = {
