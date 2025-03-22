@@ -36,6 +36,15 @@ const Navbar = ({ user, onLogout }: NavbarProps) => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Kullanıcı yoksa boş bir div döndür
+  if (!user) {
+    return <div className="h-16 bg-white/80 backdrop-blur-sm border-b border-slate-200 shadow-sm"></div>;
+  }
+
+  const userInitials = user && user.firstName && user.lastName 
+    ? `${user.firstName[0]}${user.lastName[0]}` 
+    : '';
+
   return (
     <nav className="bg-white/80 backdrop-blur-sm sticky top-0 z-50 border-b border-slate-200 shadow-sm">
       <div className="app-container">
@@ -73,49 +82,44 @@ const Navbar = ({ user, onLogout }: NavbarProps) => {
 
           {/* User dropdown */}
           <div className="flex items-center space-x-3">
-            {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <div className="flex items-center justify-center h-8 w-8 overflow-hidden rounded-full bg-slate-100 hover:ring-2 hover:ring-slate-200 transition-all duration-200">
-                      {user.profilePicture ? (
-                        <img
-                          src={user.profilePicture}
-                          alt={`${user.firstName} ${user.lastName}`}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <span className="font-medium text-slate-600">
-                          {user.firstName[0]}
-                          {user.lastName[0]}
-                        </span>
-                      )}
-                    </div>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <span className="font-medium">{`${user.firstName} ${user.lastName}`}</span>
-                      <span className="text-xs text-slate-500">{user.email}</span>
-                      <span className="text-xs capitalize px-2 py-0.5 bg-slate-100 rounded-full text-slate-700 w-fit">
-                        {user.role}
-                      </span>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={onLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Çıkış</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <div className="flex items-center justify-center h-8 w-8 overflow-hidden rounded-full bg-slate-100 hover:ring-2 hover:ring-slate-200 transition-all duration-200">
+                    {user.profilePicture ? (
+                      <img
+                        src={user.profilePicture}
+                        alt={`${user.firstName} ${user.lastName}`}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="font-medium text-slate-600">{userInitials}</span>
+                    )}
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <span className="font-medium">{`${user.firstName} ${user.lastName}`}</span>
+                    <span className="text-xs text-slate-500">{user.email}</span>
+                    <span className="text-xs capitalize px-2 py-0.5 bg-slate-100 rounded-full text-slate-700 w-fit">
+                      {user.role}
+                    </span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Çıkış</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center">
