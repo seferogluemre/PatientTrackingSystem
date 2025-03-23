@@ -55,24 +55,39 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
         // Tüm randevuları getir
         const appointmentsData = await getAllAppointments();
 
-        setAppointments(appointmentsData);
+        // Check if appointmentsData has results property and assign it correctly
+        const appointmentsList = appointmentsData && appointmentsData.results ? 
+          appointmentsData.results : 
+          (Array.isArray(appointmentsData) ? appointmentsData : []);
+        
+        setAppointments(appointmentsList);
 
         // Bugünkü randevuları filtreleme
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        console.log("app data", appointmentsData)
-
-        const todayAppts = appointmentsData?.results?.filter((appointment: Appointment) => {
+        
+        const todayAppts = appointmentsList.filter((appointment: Appointment) => {
           const apptDate = new Date(appointment.appointmentDate);
           return apptDate >= today && apptDate < tomorrow;
         });
 
         setTodayAppointments(todayAppts);
 
-        // Son hastaları listeleme (şimdilik mock data)
-        setRecentPatients(mockPatients.slice(0, 4));
+        // Son hastaları listeleme
+        try {
+          const patientsData = await getPatients();
+          setPatients(patientsData);
+          // Use first 4 patients for recent patients if available
+          if (patientsData && Array.isArray(patientsData) && patientsData.length > 0) {
+            setRecentPatients(patientsData.slice(0, 4));
+          }
+        } catch (error) {
+          console.error("Hasta verileri alınırken hata oluştu:", error);
+          // Fallback to mock data if API fails
+          setRecentPatients(mockPatients.slice(0, 4));
+        }
       } catch (error) {
         console.error("Sekreter verileri yüklenirken hata oluştu:", error);
         toast.error("Veriler yüklenirken bir hata oluştu");
@@ -80,17 +95,8 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
         setLoading(false);
       }
     };
-    const getPatientsData = async () => {
-      try {
-        const patients = await getPatients();
-        setPatients(patients)
-      } catch (error) {
-
-      }
-    }
 
     fetchSecretaryData();
-    getPatientsData();
   }, [user]);
 
   const handleStatusChange = async (id: number, status: AppointmentStatus) => {
@@ -289,7 +295,7 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle>Hızlı İşlemler</CardTitle>
-              <CardDescription>Sık kullanılan işlemlere hızlı erişim</CardDescription>
+              <CardDescription>Sık kullanılan işlemlere hızl�� erişim</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -366,20 +372,22 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {appointments
-                  ?.results?.filter(appointment => appointment.status === 'pending')
-                  .sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime())
-                  .slice(0, 3)
-                  .map((appointment) => (
-                    <AppointmentCard
-                      key={appointment.id}
-                      appointment={appointment}
-                      userRole="secretary"
-                      onStatusChange={handleStatusChange}
-                    />
-                  ))}
+                {Array.isArray(appointments) && 
+                  appointments
+                    .filter(appointment => appointment.status === 'pending')
+                    .sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime())
+                    .slice(0, 3)
+                    .map((appointment) => (
+                      <AppointmentCard
+                        key={appointment.id}
+                        appointment={appointment}
+                        userRole="secretary"
+                        onStatusChange={handleStatusChange}
+                      />
+                    ))}
 
-                {appointments?.results?.filter(a => a.status === 'pending').length === 0 && (
+                {!Array.isArray(appointments) || 
+                 appointments.filter(a => a.status === 'pending').length === 0 && (
                   <div className="text-center py-4">
                     <Clock className="mx-auto h-10 w-10 text-slate-300" />
                     <h3 className="mt-2 font-medium">Bekleyen randevu bulunmuyor</h3>

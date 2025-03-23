@@ -33,9 +33,6 @@ const Index = () => {
       const response = await login({ email, password });
       
       if (response.user) {
-        localStorage.setItem('clinicUser', JSON.stringify(response.user));
-        localStorage.setItem('clinicToken', response.token);
-        
         toast.success('Giriş başarılı');
         navigate('/dashboard');
       } else {
@@ -56,7 +53,6 @@ const Index = () => {
       const user = getRandomUser(selectedRole);
       
       if (user) {
-        localStorage.setItem('clinicUser', JSON.stringify(user));
         toast.success(`${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} olarak giriş yapıldı`);
         navigate('/dashboard');
       } else {
@@ -232,7 +228,7 @@ const Index = () => {
               </div>
               <h2 className="text-3xl font-bold mb-3">Tüm klinik süreçlerinizi tek platformda yönetin</h2>
               <p className="text-slate-600">
-                Randevu takibi, hasta kayıtları, doktor programları ve daha fazlası - hepsi kolay ve hızlı bir arayüzle.
+                Randevu planlama ve yönetim, hasta kayıtları, doktor programları ve daha fazlası - hepsi kolay ve hızlı bir arayüzle.
               </p>
             </div>
 

@@ -10,13 +10,13 @@ export const login = async (credentials: LoginCredentials) => {
   try {
     const response = await api.post('/auth/login', credentials);
 
-    console.log("Repsonse data:", response.data)
-    console.log("User data:", response.data.user)
+    console.log("Response data:", response.data);
+    console.log("User data:", response.data.user);
 
     if (response.data.token) {
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Store the complete user object in localStorage
+      localStorage.setItem('clinicToken', response.data.token);
+      localStorage.setItem('clinicUser', JSON.stringify(response.data.user));
     }
     return response.data;
   } catch (error) {
@@ -31,7 +31,7 @@ export const logout = async () => {
     localStorage.removeItem('clinicUser');
     return { success: true };
   } catch (error) {
-    // Token zaten geçersiz olsa bile local storage'ı temizle
+    // Token may already be invalid, but clear localStorage anyway
     localStorage.removeItem('clinicToken');
     localStorage.removeItem('clinicUser');
     throw error;

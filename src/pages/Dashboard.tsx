@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/ui-custom/Layout';
@@ -7,6 +6,7 @@ import DoctorDashboard from './dashboards/DoctorDashboard';
 import PatientDashboard from './dashboards/PatientDashboard';
 import SecretaryDashboard from './dashboards/SecretaryDashboard';
 import { toast } from 'sonner';
+import { getUser } from '@/services/userService';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -23,40 +23,23 @@ const Dashboard = () => {
         try {
           const parsedUser = JSON.parse(storedUser);
           
-          // If we have a valid user with id and token, try to verify with backend
-          if (parsedUser.id && localStorage.getItem('clinicToken')) {
+          // If we have a valid user with TC number and token, try to verify with backend
+          if ((parsedUser.tc_no || parsedUser.tcNo) && localStorage.getItem('clinicToken')) {
             try {
-              const response = await fetch(`http://localhost:3000/api/users/${parsedUser.tc_no || parsedUser.id}`, {
-                headers: {
-                  'Authorization': `Bearer ${localStorage.getItem('clinicToken')}`
-                }
-              });
+              // Get the latest user data from backend
+              const tcNo = parsedUser.tc_no || parsedUser.tcNo;
+              const userData = await getUser(tcNo);
               
-              if (response.ok) {
-                const userData = await response.json();
+              if (userData) {
+                // Use the backend data but keep the role from stored user if it's missing
+                const updatedUser: User = {
+                  ...userData,
+                  role: userData.role || parsedUser.role,
+                };
                 
-                // Update user data if we got a valid response
-                if (userData) {
-                  // Transform the backend user data to match our app's User type
-                  const updatedUser: User = {
-                    id: userData.id || parsedUser.id,
-                    firstName: userData.first_name || parsedUser.firstName,
-                    lastName: userData.last_name || parsedUser.lastName,
-                    email: userData.email || parsedUser.email,
-                    role: parsedUser.role, // Keep role from stored user as it might not be in response
-                    phone: userData.phone || parsedUser.phone,
-                    profilePicture: parsedUser.profilePicture
-                  };
-                  
-                  // Update localStorage with fresh data
-                  localStorage.setItem('clinicUser', JSON.stringify(updatedUser));
-                  setUser(updatedUser);
-                } else {
-                  // If we couldn't get updated data, use what we have in localStorage
-                  setUser(parsedUser);
-                }
+                setUser(updatedUser);
               } else {
-                // If verification fails, fallback to stored user
+                // If we couldn't get updated data, use what we have in localStorage
                 setUser(parsedUser);
               }
             } catch (error) {

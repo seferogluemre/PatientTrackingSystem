@@ -20,7 +20,6 @@ interface UpdateUserData {
   email?: string;
   phone?: string;
   address?: string;
-  // Diğer güncellenebilir alanlar eklenebilir
 }
 
 export const addUser = async (userData: CreateUserData) => {
@@ -35,7 +34,7 @@ export const addUser = async (userData: CreateUserData) => {
 export const getUser = async (tcNo: string) => {
   try {
     const response = await api.get(`/users/${tcNo}`);
-    console.log("Data", response.data)
+    console.log("User data:", response.data);
     return response.data;
   } catch (error) {
     throw error;
@@ -45,6 +44,12 @@ export const getUser = async (tcNo: string) => {
 export const updateUser = async (tcNo: string, userData: UpdateUserData) => {
   try {
     const response = await api.patch(`/users/${tcNo}`, userData);
+    
+    // Update user in localStorage to reflect changes
+    const currentUser = JSON.parse(localStorage.getItem('clinicUser') || '{}');
+    const updatedUser = { ...currentUser, ...userData };
+    localStorage.setItem('clinicUser', JSON.stringify(updatedUser));
+    
     return response.data;
   } catch (error) {
     throw error;

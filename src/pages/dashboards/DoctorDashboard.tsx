@@ -57,7 +57,11 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
             setDoctor(doctorInfo);
             
             // Tüm randevuları getir
-            const response = await fetch('http://localhost:3000/api/appointments');
+            const response = await fetch('http://localhost:3000/api/appointments', {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('clinicToken')}`
+              }
+            });
             const data = await response.json();
             
             if (data && data.results) {
@@ -76,8 +80,8 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                 description: appointment.description,
                 patient: appointment.patient ? {
                   id: appointment.patient.id,
-                  firstName: appointment.patient.first_name,
-                  lastName: appointment.patient.last_name,
+                  first_name: appointment.patient.first_name,
+                  last_name: appointment.patient.last_name,
                   email: appointment.patient.email,
                   dob: new Date(),
                   phone: appointment.patient.phone || '',
@@ -90,8 +94,8 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                   clinicId: appointment.doctor.clinic_id,
                   user: {
                     id: 0,
-                    firstName: '',
-                    lastName: '',
+                    first_name: '',
+                    last_name: '',
                     email: '',
                     role: 'doctor'
                   }
@@ -121,15 +125,19 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
               setTodayAppointments(todayAppts);
               
               // Fetch patients
-              const patientsResponse = await fetch('http://localhost:3000/api/users/patients');
+              const patientsResponse = await fetch('http://localhost:3000/api/users/patients', {
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('clinicToken')}`
+                }
+              });
               const patientsData = await patientsResponse.json();
               
               if (patientsData && patientsData.results) {
                 // Format patients
                 const formattedPatients = patientsData.results.map((patient: any) => ({
                   id: patient.id,
-                  firstName: patient.first_name,
-                  lastName: patient.last_name,
+                  first_name: patient.first_name,
+                  last_name: patient.last_name,
                   email: patient.email,
                   dob: new Date(),
                   phone: patient.phone || '',

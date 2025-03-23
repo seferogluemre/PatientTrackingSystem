@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -56,7 +55,6 @@ const Profile = () => {
     confirmPassword: '',
   });
   
-  // Get the user from localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem('clinicUser');
     if (storedUser) {
@@ -65,8 +63,8 @@ const Profile = () => {
       
       setFormData({
         ...formData,
-        firstName: parsedUser.firstName || parsedUser.first_name || '',
-        lastName: parsedUser.lastName || parsedUser.last_name || '',
+        firstName: parsedUser.first_name || parsedUser.firstName || '',
+        lastName: parsedUser.last_name || parsedUser.lastName || '',
         email: parsedUser.email || '',
         phone: parsedUser.phone || '',
         address: parsedUser.address || '',
@@ -103,7 +101,6 @@ const Profile = () => {
       try {
         setIsLoading(true);
         
-        // Update all editable fields
         const updateData = {
           first_name: formData.firstName,
           last_name: formData.lastName,
@@ -112,7 +109,6 @@ const Profile = () => {
           address: formData.address
         };
         
-        // Send update request to the backend
         const tcNo = user.tc_no || user.tcNo;
         if (!tcNo) {
           toast.error('Kullanıcı T.C. numarası bulunamadı');
@@ -120,21 +116,6 @@ const Profile = () => {
         }
         
         await updateUser(tcNo, updateData);
-        
-        // Update the user in memory only (not in localStorage)
-        setUser(prevUser => {
-          if (prevUser) {
-            return {
-              ...prevUser,
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-              email: formData.email,
-              phone: formData.phone,
-              address: formData.address
-            };
-          }
-          return prevUser;
-        });
         
         setIsEditing(false);
         toast.success('Profil başarıyla güncellendi');
@@ -150,7 +131,6 @@ const Profile = () => {
   const handlePasswordChange = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate passwords
     if (formData.newPassword !== formData.confirmPassword) {
       toast.error('Yeni şifreler eşleşmiyor');
       return;
@@ -163,7 +143,6 @@ const Profile = () => {
     
     toast.success('Şifre başarıyla değiştirildi');
     
-    // Reset password fields
     setFormData(prev => ({
       ...prev,
       currentPassword: '',
@@ -172,7 +151,6 @@ const Profile = () => {
     }));
   };
   
-  // Animation variants
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -204,7 +182,6 @@ const Profile = () => {
         animate="show"
         className="space-y-6"
       >
-        {/* Header */}
         <motion.div variants={item} className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold">Profil</h1>
@@ -219,7 +196,6 @@ const Profile = () => {
           )}
         </motion.div>
         
-        {/* Profile content */}
         <motion.div variants={item}>
           <Tabs defaultValue="info" className="w-full">
             <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
@@ -242,7 +218,7 @@ const Profile = () => {
                       {user.profilePicture ? (
                         <img
                           src={user.profilePicture}
-                          alt={`${user.firstName || user.first_name} ${user.lastName || user.last_name}`}
+                          alt={`${user.first_name || user.firstName} ${user.last_name || user.lastName}`}
                           className="h-full w-full object-cover rounded-full"
                         />
                       ) : (
@@ -251,7 +227,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-medium">
-                        {user.firstName || user.first_name} {user.lastName || user.last_name}
+                        {user.first_name || user.firstName} {user.last_name || user.lastName}
                       </h3>
                       <p className="text-sm text-slate-500 capitalize">{user.role}</p>
                     </div>
@@ -348,7 +324,7 @@ const Profile = () => {
                               name="specialty"
                               value={formData.specialty}
                               onChange={handleInputChange}
-                              disabled={true} // Always disabled
+                              disabled={true}
                             />
                           </div>
                         </div>
@@ -366,7 +342,7 @@ const Profile = () => {
                                   name="clinicName"
                                   value={formData.clinicName}
                                   onChange={handleInputChange}
-                                  disabled={true} // Always disabled
+                                  disabled={true}
                                   className="pl-9"
                                 />
                               </div>
@@ -380,7 +356,7 @@ const Profile = () => {
                                   name="clinicAddress"
                                   value={formData.clinicAddress}
                                   onChange={handleInputChange}
-                                  disabled={true} // Always disabled
+                                  disabled={true}
                                 />
                               </div>
                               
@@ -391,7 +367,7 @@ const Profile = () => {
                                   name="clinicPhone"
                                   value={formData.clinicPhone}
                                   onChange={handleInputChange}
-                                  disabled={true} // Always disabled
+                                  disabled={true}
                                 />
                               </div>
                             </div>
