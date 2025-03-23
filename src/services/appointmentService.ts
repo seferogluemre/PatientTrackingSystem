@@ -46,6 +46,7 @@ export const removeAppointment = async (id: number) => {
 
 export const getPatientAppointments = async (patientId: number) => {
   try {
+    // Updated to use the correct endpoint for patient appointments
     const response = await api.get(`/appointments/patient/${patientId}`);
     return response.data;
   } catch (error) {
