@@ -46,10 +46,10 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [notes, setNotes] = useState('');
-  
+
   const { status, appointmentDate, patient, doctor } = appointment;
   const statusInfo = statusConfig[status];
-  
+
   const handleComplete = () => {
     if (onStatusChange) {
       onStatusChange(appointment.id, 'completed');
@@ -57,7 +57,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
     }
     setIsCompleteDialogOpen(false);
   };
-  
+
   const handleCancel = () => {
     if (onStatusChange) {
       onStatusChange(appointment.id, 'cancelled');
@@ -82,13 +82,13 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
               <span>{statusInfo.label}</span>
             </div>
           </div>
-          
+
           <div className="mb-3">
             <p className="text-sm text-slate-500">
               {format(new Date(appointmentDate), 'dd MMMM yyyy, EEEE', { locale: tr })}
             </p>
           </div>
-          
+
           <div className="space-y-2 mb-3">
             <div className="flex justify-between">
               <p className="text-sm font-medium text-slate-700">Hasta:</p>
@@ -109,24 +109,24 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
               </div>
             )}
           </div>
-          
+
           {appointment.description && (
             <div className="border-t border-slate-100 pt-3 mb-3">
               <p className="text-sm text-slate-600 line-clamp-2">{appointment.description}</p>
             </div>
           )}
-          
+
           <div className="flex justify-between mt-4">
             <Button variant="outline" size="sm" onClick={() => setIsDetailsOpen(true)}>
               Detaylar
             </Button>
-            
+
             {userRole === 'doctor' && status === 'pending' && (
               <Button size="sm" onClick={() => setIsCompleteDialogOpen(true)}>
                 Tamamla
               </Button>
             )}
-            
+
             {(userRole === 'secretary' || userRole === 'patient') && status === 'pending' && (
               <Button variant="destructive" size="sm" onClick={() => setIsCancelDialogOpen(true)}>
                 İptal Et
@@ -135,7 +135,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
           </div>
         </div>
       </div>
-      
+
       {/* Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="sm:max-w-md">
@@ -145,7 +145,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
               {format(new Date(appointmentDate), 'dd MMMM yyyy, EEEE', { locale: tr })} - {format(new Date(appointmentDate), 'HH:mm')}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between">
@@ -155,24 +155,24 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
                   <span>{statusInfo.label}</span>
                 </div>
               </div>
-              
+
               <div className="flex justify-between">
                 <p className="font-medium">Hasta:</p>
                 <p>{patient ? `${patient.firstName} ${patient.lastName}` : 'Bilinmiyor'}</p>
               </div>
-              
+
               <div className="flex justify-between">
                 <p className="font-medium">Doktor:</p>
                 <p>{doctor && doctor.user ? `Dr. ${doctor.user.firstName} ${doctor.user.lastName}` : 'Bilinmiyor'}</p>
               </div>
-              
+
               {doctor && (
                 <div className="flex justify-between">
                   <p className="font-medium">Uzmanlık:</p>
                   <p>{doctor.specialty}</p>
                 </div>
               )}
-              
+
               {doctor && doctor.clinic && (
                 <div className="flex justify-between">
                   <p className="font-medium">Klinik:</p>
@@ -180,14 +180,14 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
                 </div>
               )}
             </div>
-            
+
             {appointment.description && (
               <div className="space-y-2">
                 <p className="font-medium">Açıklama:</p>
                 <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-md">{appointment.description}</p>
               </div>
             )}
-            
+
             {appointment.examination && (
               <div className="space-y-2">
                 <p className="font-medium">Teşhis ve Tedavi:</p>
@@ -210,7 +210,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
               </div>
             )}
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
               Kapat
@@ -218,7 +218,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Complete Appointment Dialog */}
       <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -228,7 +228,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
               Randevuyu tamamlamak için notlarınızı ekleyebilirsiniz.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <Textarea
               placeholder="Notlar (isteğe bağlı)"
@@ -237,7 +237,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
               className="min-h-[100px]"
             />
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCompleteDialogOpen(false)}>
               İptal
@@ -248,7 +248,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Cancel Appointment Dialog */}
       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -258,14 +258,14 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
               Bu randevuyu iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="flex items-center space-x-2 p-3 bg-amber-50 rounded-md border border-amber-100">
             <AlertCircle className="h-5 w-5 text-amber-500" />
             <p className="text-sm text-amber-800">
               Randevu iptal edildiğinde, hasta ve doktor bilgilendirilecektir.
             </p>
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)}>
               Vazgeç

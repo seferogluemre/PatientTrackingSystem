@@ -241,7 +241,7 @@ export const getPatientHistory = (patientId: number) => {
   const appointments = getPatientAppointments(patientId);
   const examinationIds = appointments.map(a => a.id);
   const examinations = mockExaminations.filter(e => examinationIds.includes(e.appointmentId));
-  
+
   return { appointments, examinations };
 };
 

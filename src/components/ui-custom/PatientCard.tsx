@@ -26,7 +26,6 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
 
   const calculateAge = (dob: string | Date) => {
     const birthDate = new Date(dob);
-    console.log("DOB:", patient.dob);
 
     if (isNaN(birthDate.getTime())) {
       console.error("Invalid date:", dob);
@@ -61,8 +60,11 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
             <div className="flex items-start gap-2">
               <Calendar className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-slate-600">
-                {format(new Date(patient.user?.birthDate), 'dd MMMM yyyy', { locale: tr })}
+                {patient?.user?.birthDate
+                  ? format(new Date(patient.user.birthDate), 'dd MMMM yyyy', { locale: tr })
+                  : "Tarih bulunmamaktadır"}
               </p>
+
             </div>
 
             {patient.phone && (

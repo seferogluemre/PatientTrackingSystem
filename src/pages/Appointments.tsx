@@ -158,28 +158,15 @@ const Appointments = () => {
     }
   };
 
-  // Get appointments based on user role
   useEffect(() => {
     const fetchAppointments = async () => {
       if (!user) return;
 
       setLoading(true);
       try {
-        let appointmentsData;
-
-        if (user.role === 'doctor') {
-          // Fetch doctor's appointments
-          const response = await fetch(`http://localhost:3000/api/appointments/doctor/${user.id}`);
-          appointmentsData = await response.json();
-        } else if (user.role === 'patient') {
-          // Fetch patient's appointments
-          const response = await fetch(`http://localhost:3000/api/appointments/patient/${user.id}`);
-          appointmentsData = await response.json();
-        } else if (user.role === 'secretary') {
-          // Fetch all appointments
-          const response = await fetch('http://localhost:3000/api/appointments');
-          appointmentsData = await response.json();
-        }
+        // Fetch all appointments
+        const response = await fetch('http://localhost:3000/api/appointments');
+        const appointmentsData = await response.json();
 
         if (appointmentsData && appointmentsData.results) {
           const formattedAppointments = appointmentsData.results.map((appointment: ApiAppointment) => ({
@@ -213,36 +200,6 @@ const Appointments = () => {
             } : undefined
           }));
 
-          // Try to fetch additional doctor information if needed
-          for (let i = 0; i < formattedAppointments.length; i++) {
-            if (formattedAppointments[i].doctor && !formattedAppointments[i].doctor.user?.firstName) {
-              try {
-                const doctorResponse = await fetch(`http://localhost:3000/api/users/doctor/${formattedAppointments[i].doctorId}`);
-                const doctorData = await doctorResponse.json();
-                if (doctorData.results && doctorData.results.length > 0) {
-                  const doctor = doctorData.results[0];
-                  formattedAppointments[i].doctor = {
-                    ...formattedAppointments[i].doctor!,
-                    user: {
-                      id: doctor.id || 0,
-                      firstName: doctor.first_name || '',
-                      lastName: doctor.last_name || '',
-                      email: doctor.email || '',
-                      role: 'doctor'
-                    }
-                  };
-                }
-              } catch (error) {
-                console.error('Error fetching doctor details:', error);
-              }
-            }
-          }
-
-          // Sort appointments by date (latest first)
-          formattedAppointments.sort((a, b) =>
-            new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime()
-          );
-
           setAppointments(formattedAppointments);
           setFilteredAppointments(formattedAppointments);
         } else {
@@ -262,7 +219,6 @@ const Appointments = () => {
     fetchAppointments();
   }, [user]);
 
-  // Filter appointments based on search query and status filter
   useEffect(() => {
     if (appointments.length) {
       let filtered = [...appointments];

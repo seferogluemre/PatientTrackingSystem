@@ -4,8 +4,8 @@ import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { 
-  CalendarDays, 
+import {
+  CalendarDays,
   Clock,
   Users,
   CheckCircle,
@@ -29,8 +29,8 @@ import PatientCard from '@/components/ui-custom/PatientCard';
 import { User, Appointment, Patient, AppointmentStatus, Doctor } from '@/types';
 import { getAllAppointments, editAppointment } from '@/services/appointmentService';
 import { getPatients } from '@/services/userService';
-import { 
-  mockStatsData, 
+import {
+  mockStatsData,
   getDoctorByUserId,
 } from '@/data/mockData';
 
@@ -45,7 +45,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [recentPatients, setRecentPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     const fetchDoctorData = async () => {
       if (user) {
@@ -55,7 +55,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
           const doctorInfo = getDoctorByUserId(user.id);
           if (doctorInfo) {
             setDoctor(doctorInfo);
-            
+
             // Tüm randevuları getir
             const response = await fetch('http://localhost:3000/api/appointments', {
               headers: {
@@ -63,13 +63,13 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
               }
             });
             const data = await response.json();
-            
+
             if (data && data.results) {
               // Doktorun randevularını filtrele
               const doctorAppointments = data.results.filter(
                 (appointment: any) => appointment.doctor_id === doctorInfo.id
               );
-              
+
               // Format appointments
               const formattedAppointments = doctorAppointments.map((appointment: any) => ({
                 id: appointment.id,
@@ -102,28 +102,28 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                 } : undefined,
                 examination: appointment.examination
               }));
-              
+
               // Sort appointments by date (newest first)
-              formattedAppointments.sort((a: Appointment, b: Appointment) => 
+              formattedAppointments.sort((a: Appointment, b: Appointment) =>
                 new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime()
               );
-              
+
               // Recent appointments (last 5)
               setRecentAppointments(formattedAppointments.slice(0, 5));
-              
+
               // Today's appointments
               const today = new Date();
               today.setHours(0, 0, 0, 0);
               const tomorrow = new Date(today);
               tomorrow.setDate(tomorrow.getDate() + 1);
-              
+
               const todayAppts = formattedAppointments.filter((appointment: Appointment) => {
                 const apptDate = new Date(appointment.appointmentDate);
                 return apptDate >= today && apptDate < tomorrow;
               });
-              
+
               setTodayAppointments(todayAppts);
-              
+
               // Fetch patients
               const patientsResponse = await fetch('http://localhost:3000/api/users/patients', {
                 headers: {
@@ -131,7 +131,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                 }
               });
               const patientsData = await patientsResponse.json();
-              
+
               if (patientsData && patientsData.results) {
                 // Format patients
                 const formattedPatients = patientsData.results.map((patient: any) => ({
@@ -143,11 +143,11 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                   phone: patient.phone || '',
                   address: patient.address || ''
                 }));
-                
+
                 // Filter patients for this doctor
                 const patientIds = new Set(formattedAppointments.map((appt: Appointment) => appt.patientId));
                 const doctorPatients = formattedPatients.filter((patient: Patient) => patientIds.has(patient.id));
-                
+
                 setRecentPatients(doctorPatients.slice(0, 4));
               }
             }
@@ -163,7 +163,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
 
     fetchDoctorData();
   }, [user]);
-  
+
   const handleStatusChange = async (id: number, status: AppointmentStatus) => {
     try {
       // API'ye durum güncellemesi gönder
@@ -175,26 +175,26 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
         },
         body: JSON.stringify({ status })
       });
-      
+
       // UI'ı güncelle
-      const updatedRecent = recentAppointments.map(appointment => 
+      const updatedRecent = recentAppointments.map(appointment =>
         appointment.id === id ? { ...appointment, status } : appointment
       );
-      
-      const updatedToday = todayAppointments.map(appointment => 
+
+      const updatedToday = todayAppointments.map(appointment =>
         appointment.id === id ? { ...appointment, status } : appointment
       );
-      
+
       setRecentAppointments(updatedRecent);
       setTodayAppointments(updatedToday);
-      
+
       toast.success(`Randevu durumu ${status === 'completed' ? 'tamamlandı' : status} olarak güncellendi`);
     } catch (error) {
       console.error("Randevu durumu güncellenirken hata:", error);
       toast.error("Randevu durumu güncellenirken bir hata oluştu");
     }
   };
-  
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -204,11 +204,11 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
       },
     },
   };
-  
+
   const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { 
-      opacity: 1, 
+    show: {
+      opacity: 1,
       y: 0,
       transition: {
         duration: 0.5,
@@ -238,13 +238,13 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
             {format(new Date(), 'dd MMMM yyyy, EEEE', { locale: tr })}
           </p>
         </div>
-        
+
         <Button onClick={() => navigate('/appointments/new')}>
           <CalendarDays className="mr-2 h-4 w-4" />
           Yeni Randevu
         </Button>
       </motion.div>
-      
+
       {/* Stats kartları */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
@@ -271,7 +271,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
           trend={{ value: 8, isPositive: true }}
         />
       </motion.div>
-      
+
       {/* Ana içerik */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Sol kolon */}
@@ -298,13 +298,12 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                   {todayAppointments.map((appointment) => (
                     <div key={appointment.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
                       <div className="flex items-center space-x-3">
-                        <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          appointment.status === 'pending' 
-                            ? 'bg-amber-100 text-amber-800' 
-                            : appointment.status === 'completed'
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${appointment.status === 'pending'
+                          ? 'bg-amber-100 text-amber-800'
+                          : appointment.status === 'completed'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
-                        }`}>
+                          }`}>
                           {appointment.status === 'pending' ? (
                             <Clock className="h-5 w-5" />
                           ) : appointment.status === 'completed' ? (
@@ -323,16 +322,16 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => navigate(`/examinations/new?appointmentId=${appointment.id}`)}
                         >
                           <ClipboardList className="mr-1 h-4 w-4" />
                           Muayene Et
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant={appointment.status === 'completed' ? 'ghost' : 'default'}
                           onClick={() => handleStatusChange(appointment.id, 'completed')}
                           disabled={appointment.status === 'completed'}
@@ -353,7 +352,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
               )}
             </CardContent>
           </Card>
-          
+
           {/* Son Muayeneler */}
           <Card>
             <CardHeader className="pb-3">
@@ -374,16 +373,16 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                       <div className="flex justify-between mb-2">
                         <div>
                           <h4 className="font-medium">
-                            {appointment.patient 
-                              ? `${appointment.patient.firstName} ${appointment.patient.lastName}` 
+                            {appointment.patient
+                              ? `${appointment.patient.first_name} ${appointment.patient.last_name}`
                               : 'Hasta bilgisi yok'}
                           </h4>
                           <p className="text-sm text-slate-500">
                             {format(new Date(appointment.appointmentDate), 'd MMMM yyyy, HH:mm', { locale: tr })}
                           </p>
                         </div>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={() => navigate(`/examinations/${appointment.examination?.id || 0}`)}
                         >
@@ -411,7 +410,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
             </CardFooter>
           </Card>
         </motion.div>
-        
+
         {/* Sağ kolon */}
         <motion.div variants={item} className="space-y-6">
           {/* Yaklaşan Randevular */}
@@ -441,7 +440,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
               </Button>
             </CardFooter>
           </Card>
-          
+
           {/* Son Hastalar */}
           <Card>
             <CardHeader className="pb-3">
