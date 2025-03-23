@@ -32,6 +32,7 @@ export const addUser = async (userData: CreateUserData) => {
 export const getUser = async (tcNo: string) => {
   try {
     const response = await api.get(`/users/${tcNo}`);
+    console.log("Data", response.data)
     return response.data;
   } catch (error) {
     throw error;
@@ -51,6 +52,15 @@ export const deleteUser = async (tcNo: string) => {
   try {
     const response = await api.delete(`/users/${tcNo}`);
     return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getPatients = async () => {
+  try {
+    const response = await api.get(`/users/patients`);
+    return response.data.results;
   } catch (error) {
     throw error;
   }

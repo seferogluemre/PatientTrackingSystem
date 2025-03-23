@@ -16,7 +16,6 @@ const Layout = ({ children, requireAuth = true }: LayoutProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
     const storedUser = localStorage.getItem('clinicUser');
     if (storedUser) {
       setUser(JSON.parse(storedUser));

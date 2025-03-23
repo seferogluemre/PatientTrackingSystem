@@ -3,8 +3,8 @@ export type UserRole = 'doctor' | 'secretary' | 'patient';
 
 export interface User {
   id: number;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   role: UserRole;
   phone?: string;
@@ -13,8 +13,8 @@ export interface User {
 
 export interface Patient {
   id: number;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   dob: Date;
   email: string;
   phone?: string;

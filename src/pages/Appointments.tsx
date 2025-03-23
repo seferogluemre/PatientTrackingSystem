@@ -5,9 +5,9 @@ import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { 
-  Plus, 
-  Search, 
+import {
+  Plus,
+  Search,
   Calendar,
   CheckCircle,
   XCircle,
@@ -36,11 +36,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Layout from '@/components/ui-custom/Layout';
 import AppointmentCard from '@/components/ui-custom/AppointmentCard';
 import { User, Appointment, AppointmentStatus, Doctor, Patient } from '@/types';
-import { 
-  getAllAppointments, 
-  getPatientAppointments, 
-  addAppointment 
-} from '@/services/appointmentService';
+
 import { getUser } from '@/services/userService';
 
 type FilterStatus = 'all' | AppointmentStatus;
@@ -82,7 +78,7 @@ const Appointments = () => {
   const [loading, setLoading] = useState(true);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  
+
   // Form state for new appointment
   const [formData, setFormData] = useState({
     patientId: '',
@@ -91,32 +87,32 @@ const Appointments = () => {
     appointmentTime: '',
     description: '',
   });
-  
+
   // Parse URL query parameters
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const patientId = queryParams.get('patientId');
-    
+
     if (patientId) {
       setFormData(prev => ({ ...prev, patientId }));
       setIsCreateDialogOpen(true);
     }
   }, [location.search]);
-  
+
   // Get the user from localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem('clinicUser');
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      
+
       // Fetch doctors and patients for dropdown
       fetchDoctorsAndPatients();
     } else {
       navigate('/');
     }
   }, [navigate]);
-  
+
   const fetchDoctorsAndPatients = async () => {
     try {
       // Fetch available doctors and patients for dropdowns
@@ -133,8 +129,9 @@ const Appointments = () => {
           address: p.address || ''
         }));
         setPatients(patientList);
+        console.log("patient list", patientList)
       }
-      
+
       // Fetch doctors
       const doctorsResponse = await fetch('http://localhost:3000/api/users/doctors');
       const doctorsData = await doctorsResponse.json();
@@ -153,22 +150,23 @@ const Appointments = () => {
           }
         }));
         setDoctors(doctorsList);
+        console.log("doctor list", doctorsList)
       }
     } catch (error) {
       console.error('Error fetching doctors and patients:', error);
       toast.error('Doktor ve hasta bilgileri yüklenirken hata oluştu');
     }
   };
-  
+
   // Get appointments based on user role
   useEffect(() => {
     const fetchAppointments = async () => {
       if (!user) return;
-      
+
       setLoading(true);
       try {
         let appointmentsData;
-        
+
         if (user.role === 'doctor') {
           // Fetch doctor's appointments
           const response = await fetch(`http://localhost:3000/api/appointments/doctor/${user.id}`);
@@ -182,7 +180,7 @@ const Appointments = () => {
           const response = await fetch('http://localhost:3000/api/appointments');
           appointmentsData = await response.json();
         }
-        
+
         if (appointmentsData && appointmentsData.results) {
           const formattedAppointments = appointmentsData.results.map((appointment: ApiAppointment) => ({
             id: appointment.id,
@@ -214,7 +212,7 @@ const Appointments = () => {
               }
             } : undefined
           }));
-          
+
           // Try to fetch additional doctor information if needed
           for (let i = 0; i < formattedAppointments.length; i++) {
             if (formattedAppointments[i].doctor && !formattedAppointments[i].doctor.user?.firstName) {
@@ -239,12 +237,12 @@ const Appointments = () => {
               }
             }
           }
-          
+
           // Sort appointments by date (latest first)
-          formattedAppointments.sort((a, b) => 
+          formattedAppointments.sort((a, b) =>
             new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime()
           );
-          
+
           setAppointments(formattedAppointments);
           setFilteredAppointments(formattedAppointments);
         } else {
@@ -260,42 +258,42 @@ const Appointments = () => {
         setLoading(false);
       }
     };
-    
+
     fetchAppointments();
   }, [user]);
-  
+
   // Filter appointments based on search query and status filter
   useEffect(() => {
     if (appointments.length) {
       let filtered = [...appointments];
-      
+
       // Apply status filter
       if (statusFilter !== 'all') {
         filtered = filtered.filter(appointment => appointment.status === statusFilter);
       }
-      
+
       // Apply search filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         filtered = filtered.filter(appointment => {
-          const patientName = appointment.patient 
-            ? `${appointment.patient.firstName} ${appointment.patient.lastName}`.toLowerCase() 
+          const patientName = appointment.patient
+            ? `${appointment.patient.first_name} ${appointment.patient.last_name}`.toLowerCase()
             : '';
           const doctorName = appointment.doctor && appointment.doctor.user
-            ? `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`.toLowerCase()
+            ? `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`.toLowerCase()
             : '';
           const description = appointment.description?.toLowerCase() || '';
-          
-          return patientName.includes(query) || 
-                 doctorName.includes(query) || 
-                 description.includes(query);
+
+          return patientName.includes(query) ||
+            doctorName.includes(query) ||
+            description.includes(query);
         });
       }
-      
+
       setFilteredAppointments(filtered);
     }
   }, [appointments, searchQuery, statusFilter]);
-  
+
   const handleStatusChange = async (id: number, status: AppointmentStatus) => {
     try {
       // Call the API to update appointment status
@@ -303,45 +301,44 @@ const Appointments = () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('clinicToken')}`
         },
         body: JSON.stringify({ status })
       });
-      
+
       // Update the local state
-      const updatedAppointments = appointments.map(appointment => 
+      const updatedAppointments = appointments.map(appointment =>
         appointment.id === id ? { ...appointment, status } : appointment
       );
-      
-      const updatedFiltered = filteredAppointments.map(appointment => 
+
+      const updatedFiltered = filteredAppointments.map(appointment =>
         appointment.id === id ? { ...appointment, status } : appointment
       );
-      
+
       setAppointments(updatedAppointments);
       setFilteredAppointments(updatedFiltered);
-      
+
       toast.success(`Randevu durumu başarıyla ${status === 'completed' ? 'tamamlandı' : 'iptal edildi'}`);
     } catch (error) {
       console.error('Error updating appointment status:', error);
       toast.error('Randevu durumu güncellenirken bir hata oluştu');
     }
   };
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleCreateAppointment = async () => {
     // Validate form
     if (!formData.patientId || !formData.doctorId || !formData.appointmentDate || !formData.appointmentTime) {
       toast.error('Lütfen tüm gerekli alanları doldurun');
       return;
     }
-    
+
     // Combine date and time
     const dateTime = new Date(`${formData.appointmentDate}T${formData.appointmentTime}`);
-    
+
     try {
       // Call the API to create appointment
       const response = await fetch('http://localhost:3000/api/appointments', {
@@ -359,17 +356,17 @@ const Appointments = () => {
           secretary_id: user?.role === 'secretary' ? user.id : undefined
         })
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to create appointment');
       }
-      
+
       const newAppointmentData = await response.json();
-      
+
       // Find the patient and doctor objects for the new appointment
       const patient = patients.find(p => p.id === parseInt(formData.patientId));
       const doctor = doctors.find(d => d.id === parseInt(formData.doctorId));
-      
+
       // Create a new appointment object with the returned data
       const newAppointment: Appointment = {
         id: newAppointmentData.id || appointments.length + 1,
@@ -381,15 +378,15 @@ const Appointments = () => {
         patient: patient,
         doctor: doctor,
       };
-      
+
       // Add to appointments and filtered appointments
       setAppointments([newAppointment, ...appointments]);
-      
+
       // Apply current filters to the new appointment
       if (statusFilter === 'all' || statusFilter === 'pending') {
         setFilteredAppointments([newAppointment, ...filteredAppointments]);
       }
-      
+
       // Close dialog and reset form
       setIsCreateDialogOpen(false);
       setFormData({
@@ -399,20 +396,20 @@ const Appointments = () => {
         appointmentTime: '',
         description: '',
       });
-      
+
       toast.success('Randevu başarıyla oluşturuldu');
     } catch (error) {
       console.error('Error creating appointment:', error);
       toast.error('Randevu oluşturulurken bir hata oluştu');
     }
   };
-  
+
   // Calculate stats
   const totalAppointments = appointments.length;
   const pendingAppointments = appointments.filter(a => a.status === 'pending').length;
   const completedAppointments = appointments.filter(a => a.status === 'completed').length;
   const cancelledAppointments = appointments.filter(a => a.status === 'cancelled').length;
-  
+
   // Animation variants
   const container = {
     hidden: { opacity: 0 },
@@ -423,11 +420,11 @@ const Appointments = () => {
       },
     },
   };
-  
+
   const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { 
-      opacity: 1, 
+    show: {
+      opacity: 1,
       y: 0,
       transition: { duration: 0.4 },
     },
@@ -451,7 +448,7 @@ const Appointments = () => {
             <h1 className="text-2xl font-bold">Randevular</h1>
             <p className="text-slate-500 mt-1">Randevuları görüntüleyin ve yönetin</p>
           </div>
-          
+
           {user.role !== 'patient' && (
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -459,7 +456,7 @@ const Appointments = () => {
             </Button>
           )}
         </motion.div>
-        
+
         {/* Stats */}
         <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
@@ -507,7 +504,7 @@ const Appointments = () => {
             </div>
           </div>
         </motion.div>
-        
+
         {/* Filters */}
         <motion.div variants={item} className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-grow">
@@ -519,7 +516,7 @@ const Appointments = () => {
               className="pl-9"
             />
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-slate-500" />
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as FilterStatus)}>
@@ -535,7 +532,7 @@ const Appointments = () => {
             </Select>
           </div>
         </motion.div>
-        
+
         {/* Loading indicator */}
         {loading ? (
           <motion.div variants={item} className="flex justify-center py-12">
@@ -559,15 +556,15 @@ const Appointments = () => {
               <Calendar className="mx-auto h-12 w-12 text-slate-300" />
               <h3 className="mt-2 text-lg font-medium">Randevu bulunamadı</h3>
               <p className="text-sm text-slate-500 mt-1">
-                {searchQuery || statusFilter !== 'all' ? 
-                  'Filtreleme kriterlerinize uygun randevu bulunamadı.' : 
+                {searchQuery || statusFilter !== 'all' ?
+                  'Filtreleme kriterlerinize uygun randevu bulunamadı.' :
                   'Henüz randevu oluşturulmamış.'}
               </p>
             </motion.div>
           )
         )}
       </motion.div>
-      
+
       {/* Create appointment dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -577,7 +574,7 @@ const Appointments = () => {
               Yeni bir randevu oluşturmak için aşağıdaki bilgileri doldurun.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-2">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="patientId" className="text-right">
@@ -591,14 +588,14 @@ const Appointments = () => {
                   <SelectContent>
                     {patients.map((patient) => (
                       <SelectItem key={patient.id} value={patient.id.toString()}>
-                        {patient.firstName} {patient.lastName}
+                        {patient.first_name} {patient.last_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="doctorId" className="text-right">
                 Doktor
@@ -611,14 +608,14 @@ const Appointments = () => {
                   <SelectContent>
                     {doctors.map((doctor) => (
                       <SelectItem key={doctor.id} value={doctor.id.toString()}>
-                        Dr. {doctor.user?.firstName} {doctor.user?.lastName} ({doctor.specialty})
+                        Dr. {doctor.user?.first_name} {doctor.user?.last_name} ({doctor.specialty})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="appointmentDate" className="text-right">
                 Tarih
@@ -633,7 +630,7 @@ const Appointments = () => {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="appointmentTime" className="text-right">
                 Saat
@@ -648,7 +645,7 @@ const Appointments = () => {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="description" className="text-right">
                 Açıklama
@@ -664,7 +661,7 @@ const Appointments = () => {
               </div>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
               İptal

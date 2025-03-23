@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { 
+import {
   CalendarDays,
   Clock,
   CheckCircle,
@@ -85,7 +85,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
   const [pastAppointments, setPastAppointments] = useState<Appointment[]>([]);
   const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     const fetchAppointments = async () => {
       if (user && user.id) {
@@ -97,13 +97,13 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
               'Authorization': `Bearer ${localStorage.getItem('clinicToken')}`
             }
           });
-          
+
           if (!response.ok) {
             throw new Error('Failed to fetch patient appointments');
           }
-          
+
           const data = await response.json();
-          
+
           if (data && data.results) {
             // Convert API appointments to our app's Appointment type
             const formattedAppointments: Appointment[] = await Promise.all(
@@ -114,7 +114,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                   clinic_id: 0,
                   tc_no: ''
                 };
-                
+
                 // If doctor details missing, try to fetch them
                 if (!doctorInfo.first_name && appt.doctor_id) {
                   try {
@@ -132,7 +132,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                     console.error('Error fetching doctor details:', error);
                   }
                 }
-                
+
                 return {
                   id: appt.id,
                   patientId: appt.patient_id,
@@ -172,25 +172,25 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                 };
               })
             );
-            
+
             setAppointments(formattedAppointments);
-            
+
             const today = new Date();
-            
+
             const upcoming = formattedAppointments
               .filter(appt => new Date(appt.appointmentDate) >= today && appt.status === 'pending')
               .sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime());
-            
+
             setUpcomingAppointments(upcoming);
-            
+
             if (upcoming.length > 0) {
               setNextAppointment(upcoming[0]);
             }
-            
+
             const past = formattedAppointments
               .filter(appt => new Date(appt.appointmentDate) < today || appt.status === 'completed' || appt.status === 'cancelled')
               .sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
-            
+
             setPastAppointments(past);
           } else {
             setAppointments([]);
@@ -208,7 +208,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
 
     fetchAppointments();
   }, [user]);
-  
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -218,11 +218,11 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
       },
     },
   };
-  
+
   const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { 
-      opacity: 1, 
+    show: {
+      opacity: 1,
       y: 0,
       transition: {
         duration: 0.5,
@@ -252,13 +252,13 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
             {format(new Date(), 'dd MMMM yyyy, EEEE', { locale: tr })}
           </p>
         </div>
-        
+
         <Button onClick={() => navigate('/appointments/new')}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Randevu Al
         </Button>
       </motion.div>
-      
+
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatsCard
           title="Toplam Randevu"
@@ -277,7 +277,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
           icon={<CheckCircle className="h-5 w-5" />}
         />
       </motion.div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <motion.div variants={item} className="lg:col-span-2 space-y-6">
           <Card>
@@ -300,8 +300,8 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                       </p>
                       <div className="mt-2">
                         <p className="text-sm text-slate-600">
-                          Doktor: {nextAppointment.doctor && nextAppointment.doctor.user 
-                            ? `Dr. ${nextAppointment.doctor.user.firstName} ${nextAppointment.doctor.user.lastName}` 
+                          Doktor: {nextAppointment.doctor && nextAppointment.doctor.user
+                            ? `Dr. ${nextAppointment.doctor.user.firstName} ${nextAppointment.doctor.user.lastName}`
                             : 'Belirtilmemiş'}
                         </p>
                         <p className="text-sm text-slate-600">
@@ -310,7 +310,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Button variant="outline" 
+                      <Button variant="outline"
                         onClick={() => navigate(`/appointments/${nextAppointment.id}`)}>
                         Detaylar
                       </Button>
@@ -340,7 +340,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
               )}
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Randevu Durumunuz</CardTitle>
@@ -351,7 +351,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                   <TabsTrigger value="upcoming" className="flex-1">Yaklaşan Randevular</TabsTrigger>
                   <TabsTrigger value="past" className="flex-1">Geçmiş Randevular</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="upcoming">
                   {upcomingAppointments.length > 0 ? (
                     <div className="space-y-4">
@@ -366,16 +366,16 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                                 {format(new Date(appointment.appointmentDate), 'd MMMM', { locale: tr })}, {format(new Date(appointment.appointmentDate), 'HH:mm')}
                               </p>
                               <p className="text-sm text-slate-500">
-                                Dr. {appointment.doctor && appointment.doctor.user 
-                                  ? `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}` 
+                                Dr. {appointment.doctor && appointment.doctor.user
+                                  ? `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`
                                   : 'Belirtilmemiş'}
                                 {appointment.doctor ? ` (${appointment.doctor.specialty})` : ''}
                               </p>
                             </div>
                           </div>
                           <div className="flex space-x-2">
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => navigate(`/appointments/${appointment.id}`)}
                             >
@@ -393,7 +393,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                     </div>
                   )}
                 </TabsContent>
-                
+
                 <TabsContent value="past">
                   {pastAppointments.length > 0 ? (
                     <div className="space-y-4">
@@ -401,8 +401,8 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                         <div key={appointment.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-slate-50 transition-colors">
                           <div className="flex items-center space-x-3">
                             <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 
-                              ${appointment.status === 'completed' 
-                                ? 'bg-green-100 text-green-800' 
+                              ${appointment.status === 'completed'
+                                ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'}`
                             }>
                               {appointment.status === 'completed' ? (
@@ -416,8 +416,8 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                                 {format(new Date(appointment.appointmentDate), 'd MMMM yyyy', { locale: tr })}, {format(new Date(appointment.appointmentDate), 'HH:mm')}
                               </p>
                               <p className="text-sm text-slate-500">
-                                Dr. {appointment.doctor && appointment.doctor.user 
-                                  ? `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}` 
+                                Dr. {appointment.doctor && appointment.doctor.user
+                                  ? `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`
                                   : 'Belirtilmemiş'}
                                 {appointment.doctor ? ` (${appointment.doctor.specialty})` : ''}
                               </p>
@@ -425,7 +425,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                           </div>
                           <div className="flex space-x-2">
                             {appointment.status === 'completed' && appointment.examination && (
-                              <Button 
+                              <Button
                                 size="sm"
                                 onClick={() => navigate(`/examinations/${appointment.examination.id}`)}
                               >
@@ -433,8 +433,8 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                                 Muayene Sonucu
                               </Button>
                             )}
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => navigate(`/appointments/${appointment.id}`)}
                             >
@@ -460,7 +460,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
             </CardFooter>
           </Card>
         </motion.div>
-        
+
         <motion.div variants={item} className="space-y-6">
           <Card>
             <CardHeader className="pb-3">
@@ -480,20 +480,20 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                             {format(new Date(appointment.appointmentDate), 'd MMMM yyyy', { locale: tr })}
                           </p>
                           <p className="text-sm text-slate-500">
-                            Dr. {appointment.doctor && appointment.doctor.user 
-                              ? `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}` 
+                            Dr. {appointment.doctor && appointment.doctor.user
+                              ? `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`
                               : 'Belirtilmemiş'}
                           </p>
                         </div>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={() => navigate(`/examinations/${appointment.examination?.id}`)}
                         >
                           <FileText className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       {appointment.examination && (
                         <>
                           <div className="mt-2">
@@ -508,7 +508,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                       )}
                     </div>
                   ))}
-                
+
                 {pastAppointments.filter(appt => appt.status === 'completed' && appt.examination).length === 0 && (
                   <div className="text-center py-6">
                     <Stethoscope className="mx-auto h-10 w-10 text-slate-300" />
@@ -523,7 +523,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
               </Button>
             </CardFooter>
           </Card>
-          
+
           <Card>
             <CardHeader className="pb-3">
               <CardTitle>Kişisel Bilgileriniz</CardTitle>

@@ -4,8 +4,8 @@ import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { 
-  CalendarDays, 
+import {
+  CalendarDays,
   Clock,
   Users,
   UserPlus,
@@ -30,10 +30,11 @@ import StatsCard from '@/components/ui-custom/StatsCard';
 import PatientCard from '@/components/ui-custom/PatientCard';
 import { User, Appointment, Patient, AppointmentStatus } from '@/types';
 import { getAllAppointments, editAppointment } from '@/services/appointmentService';
-import { 
-  mockStatsData, 
+import {
+  mockStatsData,
   mockPatients,
 } from '@/data/mockData';
+import { getPatients } from '@/services/userService';
 
 interface SecretaryDashboardProps {
   user: User;
@@ -45,29 +46,31 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [recentPatients, setRecentPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [patients, setPatients] = useState([]);
+
   useEffect(() => {
     const fetchSecretaryData = async () => {
       setLoading(true);
       try {
         // Tüm randevuları getir
         const appointmentsData = await getAllAppointments();
-        
+
         setAppointments(appointmentsData);
-        
+
         // Bugünkü randevuları filtreleme
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        const todayAppts = appointmentsData.filter((appointment: Appointment) => {
+        console.log("app data", appointmentsData)
+
+        const todayAppts = appointmentsData?.results?.filter((appointment: Appointment) => {
           const apptDate = new Date(appointment.appointmentDate);
           return apptDate >= today && apptDate < tomorrow;
         });
-        
+
         setTodayAppointments(todayAppts);
-        
+
         // Son hastaları listeleme (şimdilik mock data)
         setRecentPatients(mockPatients.slice(0, 4));
       } catch (error) {
@@ -77,34 +80,43 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
         setLoading(false);
       }
     };
+    const getPatientsData = async () => {
+      try {
+        const patients = await getPatients();
+        setPatients(patients)
+      } catch (error) {
+
+      }
+    }
 
     fetchSecretaryData();
+    getPatientsData();
   }, [user]);
-  
+
   const handleStatusChange = async (id: number, status: AppointmentStatus) => {
     try {
       // API'ye durum güncellemesi gönder
       await editAppointment(id, { status });
-      
+
       // UI'ı güncelle
-      const updatedAppointments = appointments.map(appointment => 
+      const updatedAppointments = appointments.map(appointment =>
         appointment.id === id ? { ...appointment, status } : appointment
       );
-      
-      const updatedTodayAppointments = todayAppointments.map(appointment => 
+
+      const updatedTodayAppointments = todayAppointments.map(appointment =>
         appointment.id === id ? { ...appointment, status } : appointment
       );
-      
+
       setAppointments(updatedAppointments);
       setTodayAppointments(updatedTodayAppointments);
-      
+
       toast.success(`Randevu durumu ${status === 'completed' ? 'tamamlandı' : status === 'cancelled' ? 'iptal edildi' : status} olarak güncellendi`);
     } catch (error) {
       console.error("Randevu durumu güncellenirken hata:", error);
       toast.error("Randevu durumu güncellenirken bir hata oluştu");
     }
   };
-  
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -114,11 +126,11 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
       },
     },
   };
-  
+
   const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { 
-      opacity: 1, 
+    show: {
+      opacity: 1,
       y: 0,
       transition: {
         duration: 0.5,
@@ -143,12 +155,12 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
     >
       <motion.div variants={item} className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Hoş geldiniz, {user.firstName} {user.lastName}</h1>
+          <h1 className="text-2xl font-bold">Hoş geldiniz, {user.first_name} {user.last_name}</h1>
           <p className="text-slate-500 mt-1">
             {format(new Date(), 'dd MMMM yyyy, EEEE', { locale: tr })}
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => navigate('/patients/new')}>
             <UserPlus className="mr-2 h-4 w-4" />
@@ -160,7 +172,7 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
           </Button>
         </div>
       </motion.div>
-      
+
       {/* İstatistik kartları */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
@@ -180,13 +192,8 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
           icon={<Clock className="h-5 w-5" />}
           trend={{ value: 5, isPositive: true }}
         />
-        <StatsCard
-          title="Bekleyen Randevular"
-          value={appointments.filter(a => a.status === 'pending').length}
-          icon={<Clipboard className="h-5 w-5" />}
-        />
       </motion.div>
-      
+
       {/* Ana içerik */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Sol kolon */}
@@ -213,13 +220,12 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
                   {todayAppointments.map((appointment) => (
                     <div key={appointment.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
                       <div className="flex items-center space-x-3">
-                        <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          appointment.status === 'pending' 
-                            ? 'bg-amber-100 text-amber-800' 
-                            : appointment.status === 'completed'
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${appointment.status === 'pending'
+                          ? 'bg-amber-100 text-amber-800'
+                          : appointment.status === 'completed'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
-                        }`}>
+                          }`}>
                           {appointment.status === 'pending' ? (
                             <Clock className="h-5 w-5" />
                           ) : appointment.status === 'completed' ? (
@@ -240,23 +246,23 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
                       <div className="flex flex-col md:flex-row gap-2">
                         <div className="text-right">
                           <p className="text-sm font-medium">
-                            Dr. {appointment.doctor && appointment.doctor.user ? `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}` : 'Doktor bilgisi yok'}
+                            Dr. {appointment.doctor && appointment.doctor.user ? `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}` : 'Doktor bilgisi yok'}
                           </p>
                           <p className="text-xs text-slate-500">
                             {appointment.doctor ? appointment.doctor.specialty : ''}
                           </p>
                         </div>
                         <div className="flex space-x-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => navigate(`/appointments/${appointment.id}`)}
                           >
                             Detaylar
                           </Button>
                           {appointment.status === 'pending' && (
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               className="text-red-500 hover:text-red-600 hover:bg-red-50"
                               onClick={() => handleStatusChange(appointment.id, 'cancelled')}
@@ -278,7 +284,7 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
               )}
             </CardContent>
           </Card>
-          
+
           {/* Hızlı İşlemler */}
           <Card>
             <CardHeader className="pb-3">
@@ -315,7 +321,7 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
             </CardContent>
           </Card>
         </motion.div>
-        
+
         {/* Sağ kolon */}
         <motion.div variants={item} className="space-y-6">
           {/* Son eklenen hastalar */}
@@ -334,11 +340,11 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentPatients.slice(0, 3).map((patient) => (
+                {patients.slice(0, 3).map((patient) => (
                   <PatientCard
                     key={patient.id}
                     patient={patient}
-                    onViewHistory={() => navigate(`/patients/${patient.id}`)}
+                    onViewHistory={() => navigate(`/patients/${patient.tc_no}`)}
                     onCreateAppointment={() => navigate(`/appointments/new?patientId=${patient.id}`)}
                   />
                 ))}
@@ -351,7 +357,7 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
               </Button>
             </CardFooter>
           </Card>
-          
+
           {/* Bekleyen Randevular */}
           <Card>
             <CardHeader className="pb-3">
@@ -361,7 +367,7 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
             <CardContent>
               <div className="space-y-4">
                 {appointments
-                  .filter(appointment => appointment.status === 'pending')
+                  ?.results?.filter(appointment => appointment.status === 'pending')
                   .sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime())
                   .slice(0, 3)
                   .map((appointment) => (
@@ -372,8 +378,8 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
                       onStatusChange={handleStatusChange}
                     />
                   ))}
-                
-                {appointments.filter(a => a.status === 'pending').length === 0 && (
+
+                {appointments?.results?.filter(a => a.status === 'pending').length === 0 && (
                   <div className="text-center py-4">
                     <Clock className="mx-auto h-10 w-10 text-slate-300" />
                     <h3 className="mt-2 font-medium">Bekleyen randevu bulunmuyor</h3>

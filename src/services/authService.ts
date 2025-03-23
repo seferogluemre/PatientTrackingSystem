@@ -1,6 +1,5 @@
 
 import api from './api';
-import { User } from '@/types';
 
 interface LoginCredentials {
   email: string;
@@ -10,13 +9,15 @@ interface LoginCredentials {
 export const login = async (credentials: LoginCredentials) => {
   try {
     const response = await api.post('/auth/login', credentials);
-    
-    // Token ve kullanıcı bilgilerini localStorage'a kaydet
+
+    console.log("Repsonse data:", response.data)
+    console.log("User data:", response.data.user)
+
     if (response.data.token) {
-      localStorage.setItem('clinicToken', response.data.token);
-      localStorage.setItem('clinicUser', JSON.stringify(response.data.user));
+      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
     }
-    
     return response.data;
   } catch (error) {
     throw error;

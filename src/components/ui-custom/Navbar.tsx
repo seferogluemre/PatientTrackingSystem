@@ -40,9 +40,9 @@ const Navbar = ({ user, onLogout }: NavbarProps) => {
   if (!user) {
     return <div className="h-16 bg-white/80 backdrop-blur-sm border-b border-slate-200 shadow-sm"></div>;
   }
-
-  const userInitials = user && user.firstName && user.lastName 
-    ? `${user.firstName[0]}${user.lastName[0]}` 
+  console.log("profile user", user)
+  const userInitials = user && user.first_name && user.last_name
+    ? `${user.first_name}${user.last_name}`
     : '';
 
   return (
@@ -89,7 +89,7 @@ const Navbar = ({ user, onLogout }: NavbarProps) => {
                     {user.profilePicture ? (
                       <img
                         src={user.profilePicture}
-                        alt={`${user.firstName} ${user.lastName}`}
+                        alt={`${user.first_name} ${user.last_name}`}
                         className="h-full w-full object-cover"
                       />
                     ) : (
@@ -101,7 +101,7 @@ const Navbar = ({ user, onLogout }: NavbarProps) => {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
-                    <span className="font-medium">{`${user.firstName} ${user.lastName}`}</span>
+                    <span className="font-medium">{`${user.first_name} ${user.last_name}`}</span>
                     <span className="text-xs text-slate-500">{user.email}</span>
                     <span className="text-xs capitalize px-2 py-0.5 bg-slate-100 rounded-full text-slate-700 w-fit">
                       {user.role}
