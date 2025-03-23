@@ -15,6 +15,9 @@ interface CreateUserData {
 }
 
 interface UpdateUserData {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
   phone?: string;
   address?: string;
   // Diğer güncellenebilir alanlar eklenebilir

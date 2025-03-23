@@ -103,8 +103,11 @@ const Profile = () => {
       try {
         setIsLoading(true);
         
-        // Only update phone and address fields
+        // Update all editable fields
         const updateData = {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
           phone: formData.phone,
           address: formData.address
         };
@@ -123,6 +126,9 @@ const Profile = () => {
           if (prevUser) {
             return {
               ...prevUser,
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              email: formData.email,
               phone: formData.phone,
               address: formData.address
             };
@@ -262,7 +268,7 @@ const Profile = () => {
                             name="firstName"
                             value={formData.firstName}
                             onChange={handleInputChange}
-                            disabled={true} // Always disabled
+                            disabled={!isEditing}
                             className="pl-9"
                           />
                         </div>
@@ -277,7 +283,7 @@ const Profile = () => {
                             name="lastName"
                             value={formData.lastName}
                             onChange={handleInputChange}
-                            disabled={true} // Always disabled
+                            disabled={!isEditing}
                             className="pl-9"
                           />
                         </div>
@@ -294,7 +300,7 @@ const Profile = () => {
                           type="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          disabled={true} // Always disabled
+                          disabled={!isEditing}
                           className="pl-9"
                         />
                       </div>

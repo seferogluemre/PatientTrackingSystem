@@ -28,9 +28,9 @@ import StatsCard from '@/components/ui-custom/StatsCard';
 import PatientCard from '@/components/ui-custom/PatientCard';
 import { User, Appointment, Patient, AppointmentStatus, Doctor } from '@/types';
 import { getAllAppointments, editAppointment } from '@/services/appointmentService';
+import { getPatients } from '@/services/userService';
 import { 
   mockStatsData, 
-  mockPatients, 
   getDoctorByUserId,
 } from '@/data/mockData';
 
@@ -57,38 +57,92 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
             setDoctor(doctorInfo);
             
             // Tüm randevuları getir
-            const appointmentsData = await getAllAppointments();
+            const response = await fetch('http://localhost:3000/api/appointments');
+            const data = await response.json();
             
-            // Doktorun randevularını filtrele
-            const doctorAppointments = appointmentsData.filter(
-              (appointment: Appointment) => appointment.doctorId === doctorInfo.id
-            );
-            
-            // Sort appointments by date (newest first)
-            doctorAppointments.sort((a: Appointment, b: Appointment) => 
-              new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime()
-            );
-            
-            // Recent appointments (last 5)
-            setRecentAppointments(doctorAppointments.slice(0, 5));
-            
-            // Today's appointments
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            
-            const todayAppts = doctorAppointments.filter((appointment: Appointment) => {
-              const apptDate = new Date(appointment.appointmentDate);
-              return apptDate >= today && apptDate < tomorrow;
-            });
-            
-            setTodayAppointments(todayAppts);
-            
-            // Son hastaları al (doktorun hastalarını)
-            const patientIds = new Set(doctorAppointments.map((appt: Appointment) => appt.patientId));
-            const doctorPatients = mockPatients.filter(patient => patientIds.has(patient.id));
-            setRecentPatients(doctorPatients.slice(0, 4));
+            if (data && data.results) {
+              // Doktorun randevularını filtrele
+              const doctorAppointments = data.results.filter(
+                (appointment: any) => appointment.doctor_id === doctorInfo.id
+              );
+              
+              // Format appointments
+              const formattedAppointments = doctorAppointments.map((appointment: any) => ({
+                id: appointment.id,
+                patientId: appointment.patient_id,
+                doctorId: appointment.doctor_id,
+                appointmentDate: new Date(appointment.appointment_date),
+                status: appointment.status as AppointmentStatus,
+                description: appointment.description,
+                patient: appointment.patient ? {
+                  id: appointment.patient.id,
+                  firstName: appointment.patient.first_name,
+                  lastName: appointment.patient.last_name,
+                  email: appointment.patient.email,
+                  dob: new Date(),
+                  phone: appointment.patient.phone || '',
+                  address: appointment.patient.address || ''
+                } : undefined,
+                doctor: appointment.doctor ? {
+                  id: appointment.doctor.id,
+                  userId: 0,
+                  specialty: appointment.doctor.specialty,
+                  clinicId: appointment.doctor.clinic_id,
+                  user: {
+                    id: 0,
+                    firstName: '',
+                    lastName: '',
+                    email: '',
+                    role: 'doctor'
+                  }
+                } : undefined,
+                examination: appointment.examination
+              }));
+              
+              // Sort appointments by date (newest first)
+              formattedAppointments.sort((a: Appointment, b: Appointment) => 
+                new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime()
+              );
+              
+              // Recent appointments (last 5)
+              setRecentAppointments(formattedAppointments.slice(0, 5));
+              
+              // Today's appointments
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const tomorrow = new Date(today);
+              tomorrow.setDate(tomorrow.getDate() + 1);
+              
+              const todayAppts = formattedAppointments.filter((appointment: Appointment) => {
+                const apptDate = new Date(appointment.appointmentDate);
+                return apptDate >= today && apptDate < tomorrow;
+              });
+              
+              setTodayAppointments(todayAppts);
+              
+              // Fetch patients
+              const patientsResponse = await fetch('http://localhost:3000/api/users/patients');
+              const patientsData = await patientsResponse.json();
+              
+              if (patientsData && patientsData.results) {
+                // Format patients
+                const formattedPatients = patientsData.results.map((patient: any) => ({
+                  id: patient.id,
+                  firstName: patient.first_name,
+                  lastName: patient.last_name,
+                  email: patient.email,
+                  dob: new Date(),
+                  phone: patient.phone || '',
+                  address: patient.address || ''
+                }));
+                
+                // Filter patients for this doctor
+                const patientIds = new Set(formattedAppointments.map((appt: Appointment) => appt.patientId));
+                const doctorPatients = formattedPatients.filter((patient: Patient) => patientIds.has(patient.id));
+                
+                setRecentPatients(doctorPatients.slice(0, 4));
+              }
+            }
           }
         } catch (error) {
           console.error("Doktor verileri yüklenirken hata oluştu:", error);
@@ -105,7 +159,14 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
   const handleStatusChange = async (id: number, status: AppointmentStatus) => {
     try {
       // API'ye durum güncellemesi gönder
-      await editAppointment(id, { status });
+      await fetch(`http://localhost:3000/api/appointments/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('clinicToken')}`
+        },
+        body: JSON.stringify({ status })
+      });
       
       // UI'ı güncelle
       const updatedRecent = recentAppointments.map(appointment => 
@@ -164,7 +225,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
     >
       <motion.div variants={item} className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Hoş geldiniz, Dr. {user.firstName} {user.lastName}</h1>
+          <h1 className="text-2xl font-bold">Hoş geldiniz, Dr. {user.firstName || user.first_name} {user.lastName || user.last_name}</h1>
           <p className="text-slate-500 mt-1">
             {format(new Date(), 'dd MMMM yyyy, EEEE', { locale: tr })}
           </p>
