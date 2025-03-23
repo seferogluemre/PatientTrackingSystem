@@ -3,12 +3,17 @@ export type UserRole = 'doctor' | 'secretary' | 'patient';
 
 export interface User {
   id: number;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   role: UserRole;
   phone?: string;
+  address?: string;
   profilePicture?: string;
+  tc_no?: string;
+  tcNo?: string;
 }
 
 export interface Patient {

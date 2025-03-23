@@ -11,6 +11,7 @@ import {
   Shield,
   Building,
   Save,
+  Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,17 +33,20 @@ import {
 import Layout from '@/components/ui-custom/Layout';
 import { User, Doctor, Clinic } from '@/types';
 import { getDoctorByUserId } from '@/data/mockData';
+import { updateUser } from '@/services/userService';
 
 const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
+    address: '',
     specialty: '',
     clinicName: '',
     clinicAddress: '',
@@ -61,10 +65,11 @@ const Profile = () => {
       
       setFormData({
         ...formData,
-        firstName: parsedUser.firstName,
-        lastName: parsedUser.lastName,
-        email: parsedUser.email,
+        firstName: parsedUser.firstName || parsedUser.first_name || '',
+        lastName: parsedUser.lastName || parsedUser.last_name || '',
+        email: parsedUser.email || '',
         phone: parsedUser.phone || '',
+        address: parsedUser.address || '',
       });
       
       if (parsedUser.role === 'doctor') {
@@ -86,28 +91,53 @@ const Profile = () => {
     }
   }, [navigate]);
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (user) {
-      // Update the user in localStorage
-      const updatedUser: User = {
-        ...user,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-      };
-      
-      localStorage.setItem('clinicUser', JSON.stringify(updatedUser));
-      setUser(updatedUser);
-      setIsEditing(false);
-      toast.success('Profil başarıyla güncellendi');
+      try {
+        setIsLoading(true);
+        
+        // Only update phone and address fields
+        const updateData = {
+          phone: formData.phone,
+          address: formData.address
+        };
+        
+        // Send update request to the backend
+        const tcNo = user.tc_no || user.tcNo;
+        if (!tcNo) {
+          toast.error('Kullanıcı T.C. numarası bulunamadı');
+          return;
+        }
+        
+        await updateUser(tcNo, updateData);
+        
+        // Update the user in memory only (not in localStorage)
+        setUser(prevUser => {
+          if (prevUser) {
+            return {
+              ...prevUser,
+              phone: formData.phone,
+              address: formData.address
+            };
+          }
+          return prevUser;
+        });
+        
+        setIsEditing(false);
+        toast.success('Profil başarıyla güncellendi');
+      } catch (error) {
+        console.error('Profile update error:', error);
+        toast.error('Profil güncellenirken bir hata oluştu');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
   
@@ -206,7 +236,7 @@ const Profile = () => {
                       {user.profilePicture ? (
                         <img
                           src={user.profilePicture}
-                          alt={`${user.firstName} ${user.lastName}`}
+                          alt={`${user.firstName || user.first_name} ${user.lastName || user.last_name}`}
                           className="h-full w-full object-cover rounded-full"
                         />
                       ) : (
@@ -215,7 +245,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-medium">
-                        {user.firstName} {user.lastName}
+                        {user.firstName || user.first_name} {user.lastName || user.last_name}
                       </h3>
                       <p className="text-sm text-slate-500 capitalize">{user.role}</p>
                     </div>
@@ -232,7 +262,7 @@ const Profile = () => {
                             name="firstName"
                             value={formData.firstName}
                             onChange={handleInputChange}
-                            disabled={!isEditing}
+                            disabled={true} // Always disabled
                             className="pl-9"
                           />
                         </div>
@@ -247,7 +277,7 @@ const Profile = () => {
                             name="lastName"
                             value={formData.lastName}
                             onChange={handleInputChange}
-                            disabled={!isEditing}
+                            disabled={true} // Always disabled
                             className="pl-9"
                           />
                         </div>
@@ -264,7 +294,7 @@ const Profile = () => {
                           type="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          disabled={!isEditing}
+                          disabled={true} // Always disabled
                           className="pl-9"
                         />
                       </div>
@@ -285,6 +315,21 @@ const Profile = () => {
                       </div>
                     </div>
                     
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Adres</Label>
+                      <div className="relative">
+                        <Home className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input
+                          id="address"
+                          name="address"
+                          value={formData.address}
+                          onChange={handleInputChange}
+                          disabled={!isEditing}
+                          className="pl-9"
+                        />
+                      </div>
+                    </div>
+                    
                     {user.role === 'doctor' && doctor && (
                       <>
                         <div className="pt-2 border-t border-slate-200">
@@ -297,7 +342,7 @@ const Profile = () => {
                               name="specialty"
                               value={formData.specialty}
                               onChange={handleInputChange}
-                              disabled={!isEditing}
+                              disabled={true} // Always disabled
                             />
                           </div>
                         </div>
@@ -315,7 +360,7 @@ const Profile = () => {
                                   name="clinicName"
                                   value={formData.clinicName}
                                   onChange={handleInputChange}
-                                  disabled={!isEditing}
+                                  disabled={true} // Always disabled
                                   className="pl-9"
                                 />
                               </div>
@@ -329,7 +374,7 @@ const Profile = () => {
                                   name="clinicAddress"
                                   value={formData.clinicAddress}
                                   onChange={handleInputChange}
-                                  disabled={!isEditing}
+                                  disabled={true} // Always disabled
                                 />
                               </div>
                               
@@ -340,7 +385,7 @@ const Profile = () => {
                                   name="clinicPhone"
                                   value={formData.clinicPhone}
                                   onChange={handleInputChange}
-                                  disabled={!isEditing}
+                                  disabled={true} // Always disabled
                                 />
                               </div>
                             </div>
@@ -354,9 +399,9 @@ const Profile = () => {
                         <Button variant="outline" onClick={() => setIsEditing(false)}>
                           İptal
                         </Button>
-                        <Button type="submit">
+                        <Button type="submit" disabled={isLoading}>
                           <Save className="mr-2 h-4 w-4" />
-                          Kaydet
+                          {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
                         </Button>
                       </div>
                     )}
