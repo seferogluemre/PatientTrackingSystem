@@ -19,12 +19,12 @@ const Dashboard = () => {
     const fetchUserData = async () => {
       setLoading(true);
       const storedUser = localStorage.getItem('clinicUser');
-      
+
       if (storedUser) {
         try {
           // Parse the user from localStorage
           const parsedUser = JSON.parse(storedUser);
-          
+
           // Use the stored user as is, with all the fields from the backend
           setUser(parsedUser);
         } catch (error) {
@@ -36,10 +36,10 @@ const Dashboard = () => {
         // No user in localStorage, redirect to login
         navigate('/');
       }
-      
+
       setLoading(false);
     };
-    
+
     fetchUserData();
   }, [navigate]);
 

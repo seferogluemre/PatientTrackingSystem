@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Appointment, AppointmentStatus } from '@/types';
+import { a } from 'node_modules/framer-motion/dist/types.d-B50aGbjN';
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -48,6 +48,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
   const [notes, setNotes] = useState('');
 
   const { status, appointmentDate, patient, doctor } = appointment;
+  console.log("doctorrrrrr", appointment)
   const statusInfo = statusConfig[status];
 
   const handleComplete = () => {
@@ -66,6 +67,11 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
     setIsCancelDialogOpen(false);
   };
 
+  const formattedDate = appointmentDate
+    ? format(new Date(appointmentDate), "dd MMM yyyy", { locale: tr })
+    : "Geçersiz Tarih";
+
+
   return (
     <>
       <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden transition-all hover:shadow-card-hover card-hover-effect">
@@ -73,9 +79,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
           <div className="flex justify-between items-start mb-3">
             <div className="flex items-center space-x-2">
               <CalendarClock className="h-5 w-5 text-clinic" />
-              <h3 className="text-lg font-medium text-slate-900">
-                {format(new Date(appointmentDate), 'HH:mm')}
-              </h3>
+              <h3 className="text-lg font-medium text-slate-900">{formattedDate}</h3>
             </div>
             <div className={cn('px-2.5 py-1 rounded-full text-xs font-medium flex items-center space-x-1 border', statusInfo.color)}>
               {statusInfo.icon}
@@ -84,17 +88,13 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
           </div>
 
           <div className="mb-3">
-            <p className="text-sm text-slate-500">
-              {format(new Date(appointmentDate), 'dd MMMM yyyy, EEEE', { locale: tr })}
-            </p>
+            <p className="text-sm text-slate-500">{formattedDate}</p>
           </div>
 
           <div className="space-y-2 mb-3">
             <div className="flex justify-between">
               <p className="text-sm font-medium text-slate-700">Hasta:</p>
-              <p className="text-sm text-slate-900">
-                {patient ? `${patient.firstName} ${patient.lastName}` : 'Bilinmiyor'}
-              </p>
+              <p className="text-sm text-slate-900">{patient ? `${patient.firstName} ${patient.lastName}` : 'Bilinmiyor'}</p>
             </div>
             <div className="flex justify-between">
               <p className="text-sm font-medium text-slate-700">Doktor:</p>
@@ -141,9 +141,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Randevu Detayı</DialogTitle>
-            <DialogDescription>
-              {format(new Date(appointmentDate), 'dd MMMM yyyy, EEEE', { locale: tr })} - {format(new Date(appointmentDate), 'HH:mm')}
-            </DialogDescription>
+            <DialogDescription>{formattedDate}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -158,12 +156,12 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
 
               <div className="flex justify-between">
                 <p className="font-medium">Hasta:</p>
-                <p>{patient ? `${patient.firstName} ${patient.lastName}` : 'Bilinmiyor'}</p>
+                <p>{patient ? `${patient.first_name} ${patient.last_name}` : 'Bilinmiyor'}</p>
               </div>
 
               <div className="flex justify-between">
                 <p className="font-medium">Doktor:</p>
-                <p>{doctor && doctor.user ? `Dr. ${doctor.user.firstName} ${doctor.user.lastName}` : 'Bilinmiyor'}</p>
+                <p>{doctor && doctor.user ? `Dr. ${doctor.user.first_name} ${doctor.user.last_name}` : 'Bilinmiyor'}</p>
               </div>
 
               {doctor && (
@@ -224,9 +222,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Randevuyu Tamamla</DialogTitle>
-            <DialogDescription>
-              Randevuyu tamamlamak için notlarınızı ekleyebilirsiniz.
-            </DialogDescription>
+            <DialogDescription>Randevuyu tamamlamak için notlarınızı ekleyebilirsiniz.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -240,11 +236,9 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCompleteDialogOpen(false)}>
-              İptal
+              Kapat
             </Button>
-            <Button onClick={handleComplete}>
-              Tamamla
-            </Button>
+            <Button onClick={handleComplete}>Tamamla</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -254,23 +248,14 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Randevuyu İptal Et</DialogTitle>
-            <DialogDescription>
-              Bu randevuyu iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-            </DialogDescription>
+            <DialogDescription>Randevuyu iptal etmek istediğinizden emin misiniz?</DialogDescription>
           </DialogHeader>
-
-          <div className="flex items-center space-x-2 p-3 bg-amber-50 rounded-md border border-amber-100">
-            <AlertCircle className="h-5 w-5 text-amber-500" />
-            <p className="text-sm text-amber-800">
-              Randevu iptal edildiğinde, hasta ve doktor bilgilendirilecektir.
-            </p>
-          </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)}>
-              Vazgeç
+              Kapat
             </Button>
-            <Button variant="destructive" onClick={handleCancel}>
+            <Button onClick={handleCancel} variant="destructive">
               İptal Et
             </Button>
           </DialogFooter>
@@ -281,3 +266,4 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
 };
 
 export default AppointmentCard;
+

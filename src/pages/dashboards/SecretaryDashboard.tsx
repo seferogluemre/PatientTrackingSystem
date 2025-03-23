@@ -56,10 +56,10 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
         const appointmentsData = await getAllAppointments();
 
         // Check if appointmentsData has results property and assign it correctly
-        const appointmentsList = appointmentsData && appointmentsData.results ? 
-          appointmentsData.results : 
+        const appointmentsList = appointmentsData && appointmentsData.results ?
+          appointmentsData.results :
           (Array.isArray(appointmentsData) ? appointmentsData : []);
-        
+
         setAppointments(appointmentsList);
 
         // Bugünkü randevuları filtreleme
@@ -67,7 +67,7 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        
+
         const todayAppts = appointmentsList.filter((appointment: Appointment) => {
           const apptDate = new Date(appointment.appointmentDate);
           return apptDate >= today && apptDate < tomorrow;
@@ -245,7 +245,7 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
                             {format(new Date(appointment.appointmentDate), 'HH:mm')}
                           </p>
                           <p className="text-sm text-slate-500">
-                            {appointment.patient ? `${appointment.patient.firstName} ${appointment.patient.lastName}` : 'Hasta bilgisi yok'}
+                            {appointment.patient ? `${appointment.patient.first_name} ${appointment.patient.last_name}` : 'Hasta bilgisi yok'}
                           </p>
                         </div>
                       </div>
@@ -372,7 +372,7 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {Array.isArray(appointments) && 
+                {Array.isArray(appointments) &&
                   appointments
                     .filter(appointment => appointment.status === 'pending')
                     .sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime())
@@ -385,14 +385,13 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
                         onStatusChange={handleStatusChange}
                       />
                     ))}
-
-                {!Array.isArray(appointments) || 
-                 appointments.filter(a => a.status === 'pending').length === 0 && (
-                  <div className="text-center py-4">
-                    <Clock className="mx-auto h-10 w-10 text-slate-300" />
-                    <h3 className="mt-2 font-medium">Bekleyen randevu bulunmuyor</h3>
-                  </div>
-                )}
+                {!Array.isArray(appointments) ||
+                  appointments.filter(a => a.status === 'pending').length === 0 && (
+                    <div className="text-center py-4">
+                      <Clock className="mx-auto h-10 w-10 text-slate-300" />
+                      <h3 className="mt-2 font-medium">Bekleyen randevu bulunmuyor</h3>
+                    </div>
+                  )}
               </div>
             </CardContent>
             <CardFooter>

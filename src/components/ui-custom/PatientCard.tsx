@@ -25,6 +25,7 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const calculateAge = (dob: string | Date) => {
+    console.log("Gelen doğum tarihi:", dob);
     const birthDate = new Date(dob);
 
     if (isNaN(birthDate.getTime())) {
@@ -36,7 +37,6 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
     const ageDate = new Date(diff);
     return Math.abs(ageDate.getUTCFullYear() - 1970);
   };
-
 
   return (
     <>
@@ -51,8 +51,9 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
                 {patient.first_name} {patient.last_name}
               </h3>
               <p className="text-sm text-slate-500">
-                {calculateAge(patient.user?.birthDate)} yaşında
+                {patient.user?.birthDate ? calculateAge(patient?.user?.birthDate) + " yaşında" : "Yaş bilgisi yok"}
               </p>
+
             </div>
           </div>
 

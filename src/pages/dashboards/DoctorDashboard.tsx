@@ -45,7 +45,6 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [recentPatients, setRecentPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const fetchDoctorData = async () => {
       if (user) {
@@ -147,7 +146,6 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                 // Filter patients for this doctor
                 const patientIds = new Set(formattedAppointments.map((appt: Appointment) => appt.patientId));
                 const doctorPatients = formattedPatients.filter((patient: Patient) => patientIds.has(patient.id));
-
                 setRecentPatients(doctorPatients.slice(0, 4));
               }
             }

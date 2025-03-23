@@ -1,17 +1,14 @@
+"use client"
 
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { toast } from 'sonner';
-import {
-  Plus,
-  Search,
-  Users,
-  UserPlus,
-  CalendarDays,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import type React from "react"
+
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { motion } from "framer-motion"
+import { toast } from "sonner"
+import { Plus, Search, Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
@@ -19,128 +16,139 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import Layout from '@/components/ui-custom/Layout';
-import PatientCard from '@/components/ui-custom/PatientCard';
-import { User, Patient } from '@/types';
-import { getUser, getPatients } from '@/services/userService';
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import Layout from "@/components/ui-custom/Layout"
+import PatientCard from "@/components/ui-custom/PatientCard"
+import type { User, Patient } from "@/types"
+import { getPatients } from "@/services/userService"
+import axios from "axios"
 
 const Patients = () => {
-
-  const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const navigate = useNavigate()
+  const [user, setUser] = useState<User | null>(null)
+  const [patients, setPatients] = useState<Patient[]>([])
+  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
   // Form state for new patient
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    dob: '',
-    email: '',
-    phone: '',
-    address: '',
-  });
+    firstName: "",
+    lastName: "",
+    dob: "",
+    email: "",
+    phone: "",
+    address: "",
+    tc: "",
+  })
 
   // Get the user from localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem('clinicUser');
+    const storedUser = localStorage.getItem("clinicUser")
     if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
+      const parsedUser = JSON.parse(storedUser)
+      setUser(parsedUser)
 
-      if (parsedUser.role === 'patient') {
+      if (parsedUser.role === "patient") {
         // Patients should not have access to patient list
-        navigate('/dashboard');
+        navigate("/dashboard")
       }
     } else {
-      navigate('/');
+      navigate("/")
     }
-  }, [navigate]);
+  }, [navigate])
 
   useEffect(() => {
-    if (user && (user.role === 'doctor' || user.role === 'secretary')) {
+    if (user && (user.role === "doctor" || user.role === "secretary")) {
       const getPatientData = async () => {
-
-        const patients = await getPatients();
+        const patients = await getPatients()
 
         setPatients(patients)
-      };
-      getPatientData();
+      }
+      getPatientData()
     }
-  }, [user]);
+  }, [user])
   // Filter patients based on search query
   useEffect(() => {
     if (patients.length) {
       if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        const filtered = patients.filter(patient => {
-          const name = `${patient.firstName} ${patient.lastName}`.toLowerCase();
-          const email = patient.email.toLowerCase();
-          const phone = patient.phone?.toLowerCase() || '';
+        const query = searchQuery.toLowerCase()
+        const filtered = patients.filter((patient) => {
+          const name = `${patient.firstName} ${patient.lastName}`.toLowerCase()
+          const email = patient.email.toLowerCase()
+          const phone = patient.phone?.toLowerCase() || ""
 
-          return name.includes(query) || email.includes(query) || phone.includes(query);
-        });
+          return name.includes(query) || email.includes(query) || phone.includes(query)
+        })
 
-        setFilteredPatients(filtered);
+        setFilteredPatients(filtered)
       } else {
-        setFilteredPatients(patients);
+        setFilteredPatients(patients)
       }
     }
-  }, [patients, searchQuery]);
+  }, [patients, searchQuery])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
-  const handleCreatePatient = () => {
-    // Validate form
+  const handleCreatePatient = async () => {
+    // Form validasyonu
     if (!formData.firstName || !formData.lastName || !formData.dob || !formData.email) {
-      toast.error('Lütfen tüm gerekli alanları doldurun');
-      return;
+      toast.error("Lütfen tüm gerekli alanları doldurun")
+      return
     }
 
-    // Create a new patient
-    const newPatient: Patient = {
-      id: patients.length + 1,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      dob: new Date(formData.dob),
+    // Yeni hasta objesi
+    const newPatient = {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      tc_no: formData.tc,
       email: formData.email,
-      phone: formData.phone,
-      address: formData.address,
-    };
+      password: "genelBirSifre",
+      role: "patient",
+      birthDate: new Date(formData.dob).toISOString(),
+    }
 
-    // Add to patients and filtered patients
-    setPatients([newPatient, ...patients]);
-    setFilteredPatients([newPatient, ...filteredPatients]);
+    try {
+      // API'ye POST isteği
+      const response = await axios.post(`http://localhost:3000/api/users`, newPatient)
 
-    // Close dialog and reset form
-    setIsCreateDialogOpen(false);
-    setFormData({
-      firstName: '',
-      lastName: '',
-      dob: '',
-      email: '',
-      phone: '',
-      address: '',
-    });
+      if (response.status === 201) {
+        // Eğer başarılı olursa, yeni hastayı listeye ekleyin
+        setPatients([newPatient, ...patients])
+        setFilteredPatients([newPatient, ...filteredPatients])
 
-    toast.success('Hasta başarıyla oluşturuldu');
-  };
+        // Formu sıfırla ve başarılı mesajını göster
+        setIsCreateDialogOpen(false)
+        setFormData({
+          firstName: "",
+          lastName: "",
+          dob: "",
+          email: "",
+          phone: "",
+          address: "",
+          tc: "",
+        })
+
+        toast.success("Hasta başarıyla oluşturuldu")
+      }
+    } catch (error) {
+      console.error("Hasta oluşturulurken bir hata oluştu:", error)
+      toast.error("Hasta oluşturulurken bir hata oluştu")
+    }
+  }
 
   const handleViewHistory = (patientId: number) => {
-    navigate(`/patients/${patientId}`);
-  };
+    navigate(`/patients/${patientId}`)
+  }
 
   const handleCreateAppointment = (patientId: number) => {
-    navigate(`/appointments/new?patientId=${patientId}`);
-  };
+    navigate(`/appointments/new?patientId=${patientId}`)
+  }
 
   // Animation variants
   const container = {
@@ -151,7 +159,7 @@ const Patients = () => {
         staggerChildren: 0.05,
       },
     },
-  };
+  }
 
   const item = {
     hidden: { opacity: 0, y: 20 },
@@ -160,23 +168,20 @@ const Patients = () => {
       y: 0,
       transition: { duration: 0.4 },
     },
-  };
-
-  if (!user || user.role === 'patient') {
-    return null;
   }
 
+  if (!user || user.role === "patient") {
+    return null
+  }
 
   return (
     <Layout>
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="space-y-6"
-      >
+      <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
         {/* Header */}
-        <motion.div variants={item} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <motion.div
+          variants={item}
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+        >
           <div>
             <h1 className="text-2xl font-bold">Hastalar</h1>
             <p className="text-slate-500 mt-1">Hasta listesi ve detayları</p>
@@ -231,9 +236,7 @@ const Patients = () => {
             <Users className="mx-auto h-12 w-12 text-slate-300" />
             <h3 className="mt-2 text-lg font-medium">Hasta bulunamadı</h3>
             <p className="text-sm text-slate-500 mt-1">
-              {searchQuery ?
-                'Arama kriterinize uygun hasta bulunamadı.' :
-                'Henüz hasta kaydı oluşturulmamış.'}
+              {searchQuery ? "Arama kriterinize uygun hasta bulunamadı." : "Henüz hasta kaydı oluşturulmamış."}
             </p>
           </motion.div>
         )}
@@ -244,9 +247,7 @@ const Patients = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Yeni Hasta Oluştur</DialogTitle>
-            <DialogDescription>
-              Yeni bir hasta kaydı oluşturmak için aşağıdaki bilgileri doldurun.
-            </DialogDescription>
+            <DialogDescription>Yeni bir hasta kaydı oluşturmak için aşağıdaki bilgileri doldurun.</DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-2">
@@ -272,16 +273,13 @@ const Patients = () => {
                 />
               </div>
             </div>
-
+            <div className="space-y-2">
+              <Label htmlFor="tc">TC</Label>
+              <Input id="tc" name="tc" placeholder="Tc" value={formData.tc} onChange={handleInputChange} />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="dob">Doğum Tarihi</Label>
-              <Input
-                id="dob"
-                name="dob"
-                type="date"
-                value={formData.dob}
-                onChange={handleInputChange}
-              />
+              <Input id="dob" name="dob" type="date" value={formData.dob} onChange={handleInputChange} />
             </div>
 
             <div className="space-y-2">
@@ -323,14 +321,13 @@ const Patients = () => {
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
               İptal
             </Button>
-            <Button onClick={handleCreatePatient}>
-              Oluştur
-            </Button>
+            <Button onClick={handleCreatePatient}>Oluştur</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </Layout>
-  );
-};
+  )
+}
 
-export default Patients;
+export default Patients
+

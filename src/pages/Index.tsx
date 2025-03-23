@@ -31,7 +31,7 @@ const Index = () => {
 
     try {
       const response = await login({ email, password });
-      
+
       if (response.user) {
         toast.success('Giriş başarılı');
         navigate('/dashboard');
@@ -51,7 +51,7 @@ const Index = () => {
 
     try {
       const user = getRandomUser(selectedRole);
-      
+
       if (user) {
         toast.success(`${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} olarak giriş yapıldı`);
         navigate('/dashboard');
@@ -82,7 +82,7 @@ const Index = () => {
   return (
     <Layout requireAuth={false}>
       <div className="min-h-[calc(100vh-8rem)] flex flex-col md:flex-row">
-        <motion.div 
+        <motion.div
           className="w-full md:w-1/2 flex items-center justify-center p-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -90,7 +90,7 @@ const Index = () => {
         >
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
-              <motion.div 
+              <motion.div
                 className="inline-flex mb-4 p-3 rounded-xl bg-clinic/10"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -100,7 +100,7 @@ const Index = () => {
                   KYS
                 </div>
               </motion.div>
-              <motion.h1 
+              <motion.h1
                 className="text-3xl font-bold"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -108,7 +108,7 @@ const Index = () => {
               >
                 Klinik Yönetim Sistemi
               </motion.h1>
-              <motion.p 
+              <motion.p
                 className="text-slate-500 mt-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -118,7 +118,7 @@ const Index = () => {
               </motion.p>
             </div>
 
-            <motion.form 
+            <motion.form
               onSubmit={handleLogin}
               className="space-y-4"
               variants={fadeInUp}
@@ -177,7 +177,7 @@ const Index = () => {
               </Button>
             </motion.form>
 
-            <motion.div 
+            <motion.div
               className="mt-8"
               variants={fadeInUp}
               initial="hidden"
@@ -215,7 +215,7 @@ const Index = () => {
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="w-full md:w-1/2 bg-clinic/5 flex items-center justify-center p-8"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -240,7 +240,7 @@ const Index = () => {
                 'Teşhis ve tedavi takibi',
                 'Klinik yönetimi',
               ].map((feature, index) => (
-                <motion.li 
+                <motion.li
                   key={index}
                   className="flex items-start gap-3"
                   variants={fadeInUp}
