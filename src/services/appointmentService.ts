@@ -53,6 +53,15 @@ export const getPatientAppointments = async (patientId: number) => {
   }
 };
 
+export const getDoctorAppointments = async (doctorId: number) => {
+  try {
+    const response = await api.get(`/appointments/doctor/${doctorId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getAllAppointments = async () => {
   try {
     const response = await api.get('/appointments');

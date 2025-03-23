@@ -47,7 +47,15 @@ export const updateUser = async (tcNo: string, userData: UpdateUserData) => {
     
     // Update user in localStorage to reflect changes
     const currentUser = JSON.parse(localStorage.getItem('clinicUser') || '{}');
-    const updatedUser = { ...currentUser, ...userData };
+    const updatedUser = { 
+      ...currentUser, 
+      ...userData,
+      // Make sure both formats are updated
+      first_name: userData.first_name || currentUser.first_name,
+      last_name: userData.last_name || currentUser.last_name,
+      firstName: userData.first_name || currentUser.first_name,
+      lastName: userData.last_name || currentUser.last_name
+    };
     localStorage.setItem('clinicUser', JSON.stringify(updatedUser));
     
     return response.data;

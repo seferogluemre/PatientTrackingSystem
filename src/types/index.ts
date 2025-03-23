@@ -1,3 +1,4 @@
+
 export type UserRole = 'doctor' | 'secretary' | 'patient';
 
 export interface User {
@@ -10,6 +11,8 @@ export interface User {
   address?: string;
   profilePicture?: string;
   tc_no?: string;
+  birthDate?: string;
+  // Aliases for frontend compatibility
   firstName?: string;
   lastName?: string;
   tcNo?: string;
@@ -23,6 +26,7 @@ export interface Patient {
   email: string;
   phone?: string;
   address?: string;
+  // Aliases for frontend compatibility
   birthDate?: string;
   firstName?: string;
   lastName?: string;

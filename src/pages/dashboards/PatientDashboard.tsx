@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -32,6 +31,7 @@ import {
 import AppointmentCard from '@/components/ui-custom/AppointmentCard';
 import StatsCard from '@/components/ui-custom/StatsCard';
 import { User, Appointment, Patient, AppointmentStatus, Examination } from '@/types';
+import { getPatientAppointments } from '@/services/appointmentService';
 
 interface PatientDashboardProps {
   user: User;
@@ -57,7 +57,7 @@ interface ApiAppointment {
     id: number;
     specialty: string;
     clinic_id: number;
-    tc_no: string;
+    tc_no?: string;
     first_name?: string;
     last_name?: string;
   };
@@ -67,15 +67,6 @@ interface ApiAppointment {
     treatment: string;
     notes?: string;
   };
-}
-
-interface ApiPatientData {
-  email: string;
-  first_name: string;
-  tc_no: string;
-  appointments: ApiAppointment[];
-  last_name: string;
-  id: number;
 }
 
 const PatientDashboard = ({ user }: PatientDashboardProps) => {
@@ -91,87 +82,56 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
       if (user && user.id) {
         setLoading(true);
         try {
-          // Fetch patient profile with appointments
-          const response = await fetch(`http://localhost:3000/api/appointments/patient/${user.id}`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('clinicToken')}`
-            }
-          });
+          const response = await getPatientAppointments(user.id);
 
-          if (!response.ok) {
-            throw new Error('Failed to fetch patient appointments');
-          }
+          if (response && response.results) {
+            const formattedAppointments: Appointment[] = response.results.map((appt: ApiAppointment) => {
+              let doctorInfo = appt.doctor || {
+                id: appt.doctor_id,
+                specialty: '',
+                clinic_id: 0,
+              };
 
-          const data = await response.json();
-
-          if (data && data.results) {
-            // Convert API appointments to our app's Appointment type
-            const formattedAppointments: Appointment[] = await Promise.all(
-              data.results.map(async (appt: ApiAppointment) => {
-                let doctorInfo = appt.doctor || {
-                  id: appt.doctor_id,
-                  specialty: '',
-                  clinic_id: 0,
-                  tc_no: ''
-                };
-
-                // If doctor details missing, try to fetch them
-                if (!doctorInfo.first_name && appt.doctor_id) {
-                  try {
-                    const doctorResponse = await fetch(`http://localhost:3000/api/users/doctor/${appt.doctor_id}`);
-                    if (doctorResponse.ok) {
-                      const doctorData = await doctorResponse.json();
-                      if (doctorData.results && doctorData.results.length > 0) {
-                        doctorInfo = {
-                          ...doctorInfo,
-                          ...doctorData.results[0]
-                        };
-                      }
-                    }
-                  } catch (error) {
-                    console.error('Error fetching doctor details:', error);
-                  }
-                }
-
-                return {
-                  id: appt.id,
-                  patientId: appt.patient_id,
-                  doctorId: appt.doctor_id,
-                  appointmentDate: new Date(appt.appointment_date),
-                  status: appt.status,
-                  description: appt.description,
-                  patient: {
-                    id: user.id,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    email: user.email,
-                    dob: new Date(),
-                    phone: user.phone || '',
-                    address: ''
-                  },
-                  doctor: {
+              return {
+                id: appt.id,
+                patientId: appt.patient_id,
+                doctorId: appt.doctor_id,
+                appointmentDate: new Date(appt.appointment_date),
+                status: appt.status,
+                description: appt.description,
+                patient: {
+                  id: user.id,
+                  first_name: user.first_name,
+                  last_name: user.last_name,
+                  email: user.email,
+                  dob: new Date(user.birthDate || Date.now()),
+                  firstName: user.first_name,
+                  lastName: user.last_name,
+                },
+                doctor: {
+                  id: doctorInfo.id,
+                  userId: 0,
+                  specialty: doctorInfo.specialty,
+                  clinicId: doctorInfo.clinic_id,
+                  user: {
                     id: doctorInfo.id,
-                    userId: 0,
-                    specialty: doctorInfo.specialty,
-                    clinicId: doctorInfo.clinic_id,
-                    user: {
-                      id: doctorInfo.id,
-                      firstName: doctorInfo.first_name || '',
-                      lastName: doctorInfo.last_name || '',
-                      email: '',
-                      role: 'doctor'
-                    }
-                  },
-                  examination: appt.examination ? {
-                    id: appt.examination.id,
-                    appointmentId: appt.id,
-                    diagnosis: appt.examination.diagnosis,
-                    treatment: appt.examination.treatment,
-                    notes: appt.examination.notes
-                  } : undefined
-                };
-              })
-            );
+                    first_name: doctorInfo.first_name || '',
+                    last_name: doctorInfo.last_name || '',
+                    firstName: doctorInfo.first_name || '',
+                    lastName: doctorInfo.last_name || '',
+                    email: '',
+                    role: 'doctor'
+                  }
+                },
+                examination: appt.examination ? {
+                  id: appt.examination.id,
+                  appointmentId: appt.id,
+                  diagnosis: appt.examination.diagnosis,
+                  treatment: appt.examination.treatment,
+                  notes: appt.examination.notes
+                } : undefined
+              };
+            });
 
             setAppointments(formattedAppointments);
 
@@ -247,7 +207,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
     >
       <motion.div variants={item} className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Hoş geldiniz, {user.firstName} {user.lastName}</h1>
+          <h1 className="text-2xl font-bold">Hoş geldiniz, {user.first_name} {user.last_name}</h1>
           <p className="text-slate-500 mt-1">
             {format(new Date(), 'dd MMMM yyyy, EEEE', { locale: tr })}
           </p>
@@ -301,7 +261,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                       <div className="mt-2">
                         <p className="text-sm text-slate-600">
                           Doktor: {nextAppointment.doctor && nextAppointment.doctor.user
-                            ? `Dr. ${nextAppointment.doctor.user.firstName} ${nextAppointment.doctor.user.lastName}`
+                            ? `Dr. ${nextAppointment.doctor.user.first_name} ${nextAppointment.doctor.user.last_name}`
                             : 'Belirtilmemiş'}
                         </p>
                         <p className="text-sm text-slate-600">
@@ -367,7 +327,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                               </p>
                               <p className="text-sm text-slate-500">
                                 Dr. {appointment.doctor && appointment.doctor.user
-                                  ? `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`
+                                  ? `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`
                                   : 'Belirtilmemiş'}
                                 {appointment.doctor ? ` (${appointment.doctor.specialty})` : ''}
                               </p>
@@ -417,7 +377,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                               </p>
                               <p className="text-sm text-slate-500">
                                 Dr. {appointment.doctor && appointment.doctor.user
-                                  ? `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`
+                                  ? `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`
                                   : 'Belirtilmemiş'}
                                 {appointment.doctor ? ` (${appointment.doctor.specialty})` : ''}
                               </p>
@@ -481,7 +441,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                           </p>
                           <p className="text-sm text-slate-500">
                             Dr. {appointment.doctor && appointment.doctor.user
-                              ? `${appointment.doctor.user.firstName} ${appointment.doctor.user.lastName}`
+                              ? `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`
                               : 'Belirtilmemiş'}
                           </p>
                         </div>
@@ -532,7 +492,7 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-sm text-slate-500">Ad Soyad</span>
-                  <span className="text-sm font-medium">{user.firstName} {user.lastName}</span>
+                  <span className="text-sm font-medium">{user.first_name} {user.last_name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-slate-500">E-posta</span>
@@ -542,6 +502,18 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
                   <div className="flex justify-between">
                     <span className="text-sm text-slate-500">Telefon</span>
                     <span className="text-sm font-medium">{user.phone}</span>
+                  </div>
+                )}
+                {user.address && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-500">Adres</span>
+                    <span className="text-sm font-medium">{user.address}</span>
+                  </div>
+                )}
+                {user.tc_no && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-slate-500">TC Kimlik No</span>
+                    <span className="text-sm font-medium">{user.tc_no}</span>
                   </div>
                 )}
               </div>

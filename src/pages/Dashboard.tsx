@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/ui-custom/Layout';
@@ -21,35 +22,11 @@ const Dashboard = () => {
       
       if (storedUser) {
         try {
+          // Parse the user from localStorage
           const parsedUser = JSON.parse(storedUser);
           
-          // If we have a valid user with TC number and token, try to verify with backend
-          if ((parsedUser.tc_no || parsedUser.tcNo) && localStorage.getItem('clinicToken')) {
-            try {
-              // Get the latest user data from backend
-              const tcNo = parsedUser.tc_no || parsedUser.tcNo;
-              const userData = await getUser(tcNo);
-              
-              if (userData) {
-                // Use the backend data but keep the role from stored user if it's missing
-                const updatedUser: User = {
-                  ...userData,
-                  role: userData.role || parsedUser.role,
-                };
-                
-                setUser(updatedUser);
-              } else {
-                // If we couldn't get updated data, use what we have in localStorage
-                setUser(parsedUser);
-              }
-            } catch (error) {
-              console.error('Error verifying user with backend:', error);
-              setUser(parsedUser); // Fallback to stored user on error
-            }
-          } else {
-            // Just use the stored user if we don't have enough info for verification
-            setUser(parsedUser);
-          }
+          // Use the stored user as is, with all the fields from the backend
+          setUser(parsedUser);
         } catch (error) {
           console.error('Error parsing user from localStorage:', error);
           toast.error('Oturum bilgileri geçersiz');
