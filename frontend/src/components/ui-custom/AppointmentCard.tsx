@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { CalendarClock, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
@@ -15,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Appointment, AppointmentStatus } from '@/types';
-import { a } from 'node_modules/framer-motion/dist/types.d-B50aGbjN';
+import { getExamination } from '@/services/examinationService';
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -46,10 +47,34 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [notes, setNotes] = useState('');
+  const [examinationData, setExaminationData] = useState<any>(null);
+  const [loadingExamination, setLoadingExamination] = useState(false);
 
   const { status, appointmentDate, patient, doctor } = appointment;
-  console.log("doctorrrrrr", appointment)
   const statusInfo = statusConfig[status];
+
+  useEffect(() => {
+    // Eğer detay modalı açıldıysa ve randevu tamamlandıysa examination bilgisini getir
+    if (isDetailsOpen && status === 'completed') {
+      fetchExaminationData();
+    }
+  }, [isDetailsOpen, status, appointment.id]);
+
+  const fetchExaminationData = async () => {
+    try {
+      setLoadingExamination(true);
+      // Burada randevu ID'sine göre examination bilgisini çekiyoruz
+      // Backend'de bu ilişki kurulmuşsa çalışacaktır
+      if (appointment.examination?.id) {
+        const data = await getExamination(appointment.examination.id);
+        setExaminationData(data);
+      }
+    } catch (error) {
+      console.error("Examination bilgisi getirilemedi:", error);
+    } finally {
+      setLoadingExamination(false);
+    }
+  };
 
   const handleComplete = () => {
     if (onStatusChange) {
@@ -70,7 +95,6 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
   const formattedDate = appointmentDate
     ? format(new Date(appointmentDate), "dd MMM yyyy", { locale: tr })
     : "Geçersiz Tarih";
-
 
   return (
     <>
@@ -156,12 +180,12 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
 
               <div className="flex justify-between">
                 <p className="font-medium">Hasta:</p>
-                <p>{patient ? `${patient.first_name} ${patient.last_name}` : 'Bilinmiyor'}</p>
+                <p>{patient ? `${patient.firstName} ${patient.lastName}` : 'Bilinmiyor'}</p>
               </div>
 
               <div className="flex justify-between">
                 <p className="font-medium">Doktor:</p>
-                <p>{doctor && doctor.user ? `Dr. ${doctor.user.first_name} ${doctor.user.last_name}` : 'Bilinmiyor'}</p>
+                <p>{doctor && doctor.user ? `Dr. ${doctor.user.firstName} ${doctor.user.lastName}` : 'Bilinmiyor'}</p>
               </div>
 
               {doctor && (
@@ -186,25 +210,37 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
               </div>
             )}
 
-            {appointment.examination && (
+            {/* Eğer randevu tamamlandıysa ve teşhis varsa göster */}
+            {status === 'completed' && (
               <div className="space-y-2">
                 <p className="font-medium">Teşhis ve Tedavi:</p>
-                <div className="bg-slate-50 p-3 rounded-md space-y-2">
-                  <div>
-                    <p className="text-xs text-slate-500">Teşhis</p>
-                    <p className="text-sm">{appointment.examination.diagnosis}</p>
+                
+                {loadingExamination ? (
+                  <div className="text-center p-3">
+                    <p className="text-sm text-slate-500">Yükleniyor...</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Tedavi</p>
-                    <p className="text-sm">{appointment.examination.treatment}</p>
-                  </div>
-                  {appointment.examination.notes && (
+                ) : examinationData ? (
+                  <div className="bg-slate-50 p-3 rounded-md space-y-2">
                     <div>
-                      <p className="text-xs text-slate-500">Notlar</p>
-                      <p className="text-sm">{appointment.examination.notes}</p>
+                      <p className="text-xs text-slate-500">Teşhis</p>
+                      <p className="text-sm">{examinationData.diagnosis}</p>
                     </div>
-                  )}
-                </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Tedavi</p>
+                      <p className="text-sm">{examinationData.treatment}</p>
+                    </div>
+                    {examinationData.notes && (
+                      <div>
+                        <p className="text-xs text-slate-500">Notlar</p>
+                        <p className="text-sm">{examinationData.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-md">
+                    Teşhis bilgisi bulunamadı
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -266,4 +302,3 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
 };
 
 export default AppointmentCard;
-
