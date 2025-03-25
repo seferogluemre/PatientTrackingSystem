@@ -1,3 +1,4 @@
+
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -11,6 +12,8 @@ interface CreateExaminationBody {
 }
 
 interface UpdateExaminationBody {
+    diagnosis?: string;
+    treatment?: string;
     notes?: string;
 }
 
@@ -49,14 +52,16 @@ export const updateExamination = async (id: number, body: UpdateExaminationBody)
                 id: id
             },
             data: {
-                notes: body.notes
+                notes: body.notes,
+                diagnosis: body.diagnosis,
+                treatment: body.treatment
             }
         })
 
         return updatedExamination;
     } catch (error) {
-        console.error("Error creating Examination:", error);
-        throw new Error("Could not create Examination.");
+        console.error("Error updating Examination:", error);
+        throw new Error("Could not update Examination.");
     }
 }
 
@@ -69,7 +74,37 @@ export const getExaminationById = async (id: number) => {
                 appointment_id: true,
                 diagnosis: true,
                 treatment: true,
-                notes: true
+                notes: true,
+                appointment: {
+                    select: {
+                        id: true,
+                        patient_id: true,
+                        doctor_id: true,
+                        appointment_date: true,
+                        status: true,
+                        description: true,
+                        patient: {
+                            select: {
+                                id: true,
+                                first_name: true,
+                                last_name: true,
+                                email: true
+                            }
+                        },
+                        doctor: {
+                            select: {
+                                id: true,
+                                specialty: true,
+                                user: {
+                                    select: {
+                                        first_name: true,
+                                        last_name: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         });
 

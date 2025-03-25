@@ -1,3 +1,4 @@
+
 import { plainToInstance } from "class-transformer"
 import { validate } from "class-validator";
 import { Request, Response } from "express"
@@ -12,7 +13,7 @@ export const addExamination = async (req: Request, res: Response) => {
 
         const errors = await validate(examinationDto)
 
-        if (errors.length > 1) {
+        if (errors.length > 0) {
             return res.status(403).json({
                 message: "Validation Error",
                 error: errors.map(err => err.constraints)
@@ -28,7 +29,7 @@ export const addExamination = async (req: Request, res: Response) => {
     } catch (error) {
         console.error("Error log:", (error as Error).message)
         return res.status(500).json({
-            erorr: (error as Error).message
+            error: (error as Error).message
         })
     }
 }
@@ -47,7 +48,7 @@ export const editExamination = async (req: Request, res: Response) => {
 
         const errors = await validate(examinationDto);
 
-        if (errors.length > 1) {
+        if (errors.length > 0) {
             return res.status(403).json({
                 message: "Validation Error",
                 error: errors.map(err => err.constraints)
@@ -56,14 +57,14 @@ export const editExamination = async (req: Request, res: Response) => {
 
         const updatedExamination = await updateExamination(Number(id), examinationDto);
 
-        return res.status(201).json({
+        return res.status(200).json({
             message: "Examination Updated Successfully",
             data: updatedExamination
         })
     } catch (error) {
         console.error("Error log:", (error as Error).message)
         return res.status(500).json({
-            erorr: (error as Error).message
+            error: (error as Error).message
         })
     }
 }

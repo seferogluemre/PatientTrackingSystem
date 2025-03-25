@@ -5,6 +5,7 @@ interface CreateExaminationData {
   appointment_id: number;
   treatment: string;
   diagnosis: string;
+  notes?: string;
 }
 
 interface UpdateExaminationData {
@@ -25,7 +26,7 @@ export const addExamination = async (examinationData: CreateExaminationData) => 
 export const getExamination = async (id: number) => {
   try {
     const response = await api.get(`/examinations/${id}`);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     throw error;
   }

@@ -1,3 +1,4 @@
+
 import { Router } from "express";
 import { addExamination, editExamination, getExamination, removeExamination } from "src/controller/examination_controller";
 
