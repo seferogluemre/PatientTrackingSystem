@@ -13,7 +13,8 @@ import {
   Edit,
   User,
   Stethoscope,
-  Pill
+  Pill,
+  Clock
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -30,8 +31,9 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Examination, User, AppointmentStatus } from '@/types';
-import { getExamination, addExamination, updateExamination } from '@/services/examinationService';
+import { getExamination, addExamination, updateExamination, getDoctorExaminations } from '@/services/examinationService';
 import { getAppointment } from '@/services/appointmentService';
+import { ExaminationCard } from '@/components/ui-custom/appointment';
 
 const Examinations = () => {
   const navigate = useNavigate();
@@ -39,6 +41,8 @@ const Examinations = () => {
   const { id } = useParams();
   const [examination, setExamination] = useState<Examination | null>(null);
   const [appointment, setAppointment] = useState<any>(null);
+  const [examinations, setExaminations] = useState<any[]>([]);
+  const [recentExaminations, setRecentExaminations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,8 +64,36 @@ const Examinations = () => {
 
     if (id) {
       fetchExaminationDetails(Number(id));
+    } else {
+      fetchDoctorExaminations();
     }
   }, [id]);
+
+  const fetchDoctorExaminations = async () => {
+    setLoading(true);
+    try {
+      const storedUser = localStorage.getItem('clinicUser');
+      if (!storedUser) return;
+      
+      const userData = JSON.parse(storedUser);
+      
+      // Check if we have a doctor id
+      if (userData.id) {
+        const data = await getDoctorExaminations(userData.id);
+        setExaminations(data);
+        setRecentExaminations(data.slice(0, 6)); // Get the most recent 6
+      }
+    } catch (error) {
+      console.error("Failed to fetch examinations:", error);
+      toast({
+        title: "Hata",
+        description: "Muayene listesi yüklenemedi",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchExaminationDetails = async (examinationId: number) => {
     setLoading(true);
@@ -96,7 +128,8 @@ const Examinations = () => {
       await addExamination({
         appointment_id: formData.appointmentId,
         diagnosis: formData.diagnosis,
-        treatment: formData.treatment
+        treatment: formData.treatment,
+        notes: formData.notes
       });
       toast({
         title: "Başarılı",
@@ -110,6 +143,8 @@ const Examinations = () => {
         treatment: '',
         notes: ''
       });
+      // Refresh the list
+      fetchDoctorExaminations();
     } catch (error) {
       console.error("Failed to add examination:", error);
       toast({
@@ -145,6 +180,14 @@ const Examinations = () => {
       });
     }
   };
+
+  // Filter examinations based on search term
+  const filteredExaminations = examinations.filter(exam => {
+    const patientName = `${exam.appointment?.patient?.first_name} ${exam.appointment?.patient?.last_name}`.toLowerCase();
+    return patientName.includes(searchTerm.toLowerCase()) || 
+           exam.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           exam.treatment.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   // If user is a patient, redirect if not their examination
   const userIsPatient = user?.role === 'patient';
@@ -183,7 +226,7 @@ const Examinations = () => {
           {(user?.role === 'doctor' || user?.role === 'secretary') && (
             <Button onClick={() => {
               setFormData({
-                appointmentId: examination.appointmentId,
+                appointmentId: examination.appointment_id,
                 diagnosis: examination.diagnosis,
                 treatment: examination.treatment,
                 notes: examination.notes || ''
@@ -307,7 +350,7 @@ const Examinations = () => {
       <div className="flex items-center space-x-2">
         <Search className="h-5 w-5 text-slate-400" />
         <Input
-          placeholder="Hasta TC No veya adı ile ara..."
+          placeholder="Hasta adı veya teşhis ile ara..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-md"
@@ -320,49 +363,47 @@ const Examinations = () => {
           <TabsTrigger value="recent">Son Eklenenler</TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Dummy data for examinations listing - in a real implementation, 
-                this would be fetched from the API */}
-            {/* The component shows the structure but doesn't implement the full 
-                listing functionality as it would require additional API endpoints */}
-            {[1, 2, 3].map((item) => (
-              <Card key={item} className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => navigate(`/examinations/${item}`)}>
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center">
-                      <FileText className="h-8 w-8 text-clinic mr-2" />
-                      <div>
-                        <h3 className="font-medium">Örnek Hasta</h3>
-                        <p className="text-sm text-slate-500">Dr. Ahmet Yılmaz</p>
-                      </div>
-                    </div>
-                    <div className="text-sm text-slate-500">
-                      {format(new Date(), 'dd MMM yyyy', { locale: tr })}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs text-slate-500">Teşhis</p>
-                      <p className="text-sm line-clamp-1">Örnek teşhis</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Tedavi</p>
-                      <p className="text-sm line-clamp-1">Örnek tedavi</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center min-h-[40vh]">
+              <div className="animate-pulse text-lg flex items-center">
+                <Clock className="mr-2 h-5 w-5" />
+                Muayene kayıtları yükleniyor...
+              </div>
+            </div>
+          ) : filteredExaminations.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredExaminations.map((examination) => (
+                <ExaminationCard key={examination.id} examination={examination} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <FileText className="mx-auto h-12 w-12 text-slate-300" />
+              <h3 className="mt-2 text-lg font-medium">Muayene kaydı bulunamadı</h3>
+              <p className="text-sm text-slate-500 mt-1">
+                {searchTerm 
+                  ? "Arama kriterlerinize uygun muayene kaydı bulunamadı." 
+                  : "Henüz kayıtlı muayene bulunmuyor."}
+              </p>
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="recent" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Similar content for recent examinations */}
-            <p className="col-span-full text-center text-slate-500 py-10">
-              Henüz kayıt bulunmuyor.
-            </p>
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center min-h-[40vh]">
+              <div className="animate-pulse text-lg">Yükleniyor...</div>
+            </div>
+          ) : recentExaminations.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recentExaminations.map((examination) => (
+                <ExaminationCard key={examination.id} examination={examination} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <p className="text-slate-500">Henüz kayıt bulunmuyor.</p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

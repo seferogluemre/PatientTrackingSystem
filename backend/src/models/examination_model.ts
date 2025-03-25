@@ -1,8 +1,6 @@
-
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-
 
 interface CreateExaminationBody {
     appointment_id: number;
@@ -136,5 +134,57 @@ export const deleteExamination = async (id: number) => {
     } catch (error) {
         console.error("Error deleting Examination:", error);
         throw new Error("Could not delete Examination.");
+    }
+};
+
+export const getExaminationsByDoctorId = async (doctorId: number) => {
+    try {
+        const examinations = await prisma.examination.findMany({
+            where: {
+                appointment: {
+                    doctor_id: doctorId
+                }
+            },
+            include: {
+                appointment: {
+                    select: {
+                        id: true,
+                        patient_id: true,
+                        doctor_id: true,
+                        appointment_date: true,
+                        status: true,
+                        description: true,
+                        patient: {
+                            select: {
+                                id: true,
+                                first_name: true,
+                                last_name: true,
+                                email: true
+                            }
+                        },
+                        doctor: {
+                            select: {
+                                id: true,
+                                specialty: true,
+                                user: {
+                                    select: {
+                                        first_name: true,
+                                        last_name: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                id: 'desc'
+            }
+        });
+
+        return examinations;
+    } catch (error) {
+        console.error("Error getting examinations by doctor ID:", error);
+        throw new Error("Could not retrieve examinations.");
     }
 };

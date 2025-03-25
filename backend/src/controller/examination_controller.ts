@@ -1,11 +1,9 @@
-
 import { plainToInstance } from "class-transformer"
 import { validate } from "class-validator";
 import { Request, Response } from "express"
 import { CreateExaminationDto } from "src/dto/examination/CreateExaminationDto"
 import { UpdateExaminationDto } from "src/dto/examination/UpdateExaminationDto";
-import { createExamination, updateExamination, deleteExamination, getExaminationById } from "src/models/examination_model";
-
+import { createExamination, updateExamination, deleteExamination, getExaminationById, getExaminationsByDoctorId } from "src/models/examination_model";
 
 export const addExamination = async (req: Request, res: Response) => {
     try {
@@ -120,6 +118,30 @@ export const removeExamination = async (req: Request, res: Response) => {
         return res.status(200).json({
             message: "Examination Deleted Successfully",
             data: deletedExamination
+        });
+    } catch (error) {
+        console.error("Error log:", (error as Error).message);
+        return res.status(500).json({
+            error: (error as Error).message
+        });
+    }
+};
+
+export const getDoctorExaminations = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                message: "Doctor id required"
+            });
+        }
+
+        const examinations = await getExaminationsByDoctorId(Number(id));
+
+        return res.status(200).json({
+            message: "Examinations Retrieved Successfully",
+            data: examinations
         });
     } catch (error) {
         console.error("Error log:", (error as Error).message);

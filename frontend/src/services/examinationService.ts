@@ -32,6 +32,15 @@ export const getExamination = async (id: number) => {
   }
 };
 
+export const getDoctorExaminations = async (doctorId: number) => {
+  try {
+    const response = await api.get(`/examinations/doctor/${doctorId}`);
+    return response.data.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const updateExamination = async (id: number, examinationData: UpdateExaminationData) => {
   try {
     const response = await api.patch(`/examinations/${id}`, examinationData);
