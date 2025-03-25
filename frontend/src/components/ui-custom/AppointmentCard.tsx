@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { CalendarClock, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -79,7 +79,10 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
   const handleComplete = () => {
     if (onStatusChange) {
       onStatusChange(appointment.id, 'completed');
-      toast.success('Randevu başarıyla tamamlandı');
+      toast({
+        title: "Başarılı",
+        description: "Randevu başarıyla tamamlandı",
+      });
     }
     setIsCompleteDialogOpen(false);
   };
@@ -87,7 +90,10 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
   const handleCancel = () => {
     if (onStatusChange) {
       onStatusChange(appointment.id, 'cancelled');
-      toast.success('Randevu başarıyla iptal edildi');
+      toast({
+        title: "Başarılı",
+        description: "Randevu başarıyla iptal edildi",
+      });
     }
     setIsCancelDialogOpen(false);
   };
