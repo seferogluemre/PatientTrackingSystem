@@ -1,0 +1,39 @@
+{
+  "name": "hospital-management-system",
+  "version": "1.0.0",
+  "main": "Server.ts",
+  "type": "module",
+  "scripts": {
+    "start": "pnpm tsx ./src/Server.ts",
+    "dev": "pnpm tsx watch ./src/Server.ts",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "Yunus Emre SEFEROĞLU",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@prisma/client": "^6.5.0",
+    "bcryptjs": "^3.0.2",
+    "class-transformer": "^0.5.1",
+    "class-transformer-validator": "^0.9.1",
+    "class-validator": "^0.14.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^6.5.0",
+    "tsx": "^4.19.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.13.10",
+    "bcrypt": "^5.1.1",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}

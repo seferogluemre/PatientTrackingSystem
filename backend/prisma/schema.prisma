@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  doctor
+  secretary
+  patient
+}
+
+enum AppointmentStatus {
+  pending
+  completed
+  cancelled
+}
+
+model User {
+  id         Int         @id @default(autoincrement())
+  first_name String
+  last_name  String
+  email      String      @unique
+  password   String
+  role       Role
+  phone      String?
+  address    String?
+  tc_no      String      @unique @db.VarChar(11)
+  joined_at  DateTime    @default(now())
+  birthDate  DateTime
+  Patient    Patient?
+  Doctor     Doctor[]
+  Secretary  Secretary[]
+  Session    Session[]
+
+  @@map("users")
+}
+
+model Patient {
+  id           Int           @id @default(autoincrement())
+  first_name   String
+  last_name    String
+  email        String        @unique
+  tc_no        String        @unique @db.VarChar(11)
+  user         User          @relation(fields: [tc_no], references: [tc_no])
+  appointments Appointment[]
+  Doctor       Doctor?       @relation(fields: [doctorId], references: [id])
+  doctorId     Int?
+
+  @@map("patients")
+}
+
+model Doctor {
+  id           Int           @id @default(autoincrement())
+  specialty    String
+  clinic_id    Int
+  user         User          @relation(fields: [tc_no], references: [tc_no])
+  clinic       Clinic        @relation(fields: [clinic_id], references: [id])
+  tc_no        String        @unique @db.VarChar(11)
+  appointments Appointment[]
+  examinations Examination[]
+  patients     Patient[]
+
+  @@map("doctors")
+}
+
+model Secretary {
+  id           Int           @id @default(autoincrement())
+  user         User          @relation(fields: [tc_no], references: [tc_no])
+  tc_no        String        @unique @db.VarChar(11)
+  appointments Appointment[]
+  clinics      Clinic[]      @relation("SecretaryClinic")
+
+  @@map("secretaries")
+}
+
+model Appointment {
+  id               Int               @id @default(autoincrement())
+  patient_id       Int
+  doctor_id        Int
+  appointment_date DateTime
+  status           AppointmentStatus
+  description      String?
+  completed_at     DateTime?
+  patient          Patient           @relation(fields: [patient_id], references: [id])
+  doctor           Doctor            @relation(fields: [doctor_id], references: [id])
+  Secretary        Secretary?        @relation(fields: [secretaryId], references: [id])
+  secretaryId      Int?
+
+  examinations Examination[]
+
+  @@map("appointments")
+}
+
+model Examination {
+  id             Int     @id @default(autoincrement())
+  appointment_id Int
+  diagnosis      String
+  treatment      String
+  notes          String?
+  doctorId       Int?
+  Doctor         Doctor? @relation(fields: [doctorId], references: [id])
+
+  appointment Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+
+  @@map("examinations")
+}
+
+model Clinic {
+  id          Int         @id @default(autoincrement())
+  name        String
+  doctors     Doctor[]
+  secretaries Secretary[] @relation("SecretaryClinic")
+
+  @@map("clinics")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    Int      @map("user_id")
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
