@@ -1,26 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
+import { AppointmentStatus, CreateAppointmentBody, UpdateAppointmentBody } from "src/types";
 
 const prisma = new PrismaClient();
-
-export enum AppointmentStatus {
-    pending = "pending",
-    completed = "completed",
-    cancelled = "cancelled"
-}
-
-interface CreateAppointmentBody {
-    patient_id: number,
-    doctor_id: number,
-    date: Date,
-    status: AppointmentStatus,
-    description: string,
-    secretary_id: number,
-}
-
-interface UpdateAppointmentBody {
-    data?: Date,
-    status?: AppointmentStatus,
-}
 
 export const createAppointment = async (body: CreateAppointmentBody) => {
     try {

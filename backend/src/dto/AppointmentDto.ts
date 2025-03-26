@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty, IsNumber, IsDateString } from "class-validator";
-import { AppointmentStatus } from "src/models/appointment_model";
+import { IsString, IsNotEmpty, IsNumber, IsDateString, IsDate, IsOptional } from "class-validator";
+import { AppointmentStatus } from "src/types";
 
 
 export class CreateAppointmentDto {
@@ -26,4 +26,14 @@ export class CreateAppointmentDto {
     @IsNumber()
     @IsNotEmpty()
     secretary_id!: number;
+}
+
+export class UpdateAppointmentDto {
+    @IsDate()
+    @IsOptional()
+    date?: Date;
+
+    @IsString()
+    @IsOptional()
+    status?: AppointmentStatus;
 }

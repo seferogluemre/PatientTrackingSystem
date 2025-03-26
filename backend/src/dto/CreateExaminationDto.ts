@@ -18,3 +18,19 @@ export class CreateExaminationDto {
     @IsOptional()
     notes?: string;
 }
+
+
+export class UpdateExaminationDto {
+    @IsString()
+    @IsOptional()
+    diagnosis?: string;
+
+    @IsString()
+    @IsOptional()
+    treatment?: string;
+
+    @IsString()
+    @IsOptional()
+    notes?: string;
+}
+

@@ -1,34 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { CreateUserBody, UpdateUserBody } from "src/types";
 
 const prisma = new PrismaClient();
-
-export enum UserRole {
-    patient = "patient",
-    doctor = "doctor",
-    secretary = "secretary"
-}
-
-interface CreateUserBody {
-    first_name: string;
-    last_name: string;
-    tc_no: string;
-    email: string;
-    password: string;
-    role: UserRole;
-    birthDate: Date;
-    specialty?: string;
-    clinic_id?: number;
-}
-
-interface UpdateUserBody {
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-    password?: string;
-    phone?: string;
-    address?: string
-}
 
 export const createUser = async (body: CreateUserBody) => {
     if (!body.role || !body.tc_no) {

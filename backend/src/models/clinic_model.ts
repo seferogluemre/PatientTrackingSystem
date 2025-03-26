@@ -8,6 +8,7 @@ interface CreateClinicBody {
 interface UpdateClinicBody {
     name: string;
 }
+
 export const getClinics = async () => {
     try {
         const clinics = await prisma.clinic.findMany();
