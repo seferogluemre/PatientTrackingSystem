@@ -10,12 +10,13 @@ export const login = async (req: Request, res: Response) => {
 
         const user = await userIsValidate(email);
 
+        console.log("user found:", user);
         if (!user) {
             return res.status(401).json({ message: "user not found" });
         }
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
-
+        console.log("Password valid:", isPasswordValid);  // Bu değeri kontrol edin
         if (!isPasswordValid) {
             return res.status(401).json({ message: "invalid login information" });
         }

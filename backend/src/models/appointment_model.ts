@@ -190,7 +190,6 @@ export const getAppointmentsByPatient = async (patientId: number) => {
     }
 };
 
-
 export const getAppointments = async (status?: AppointmentStatus) => {
     const filter: Prisma.AppointmentWhereInput = {};
     if (status) {
@@ -215,4 +214,46 @@ export const getAppointments = async (status?: AppointmentStatus) => {
     });
 
     return appointments;
+}
+
+export const getAppointmentByDoctor = async (doctorId: number) => {
+    try {
+        if (!doctorId) {
+            return { message: "doctor id is required" };
+        }
+
+        // Önce users tablosunda bu patientId'yi arayalım
+        const doctor = await prisma.doctor.findUnique({
+            where: { id: doctorId },
+        });
+
+        if (!doctor) {
+            return { message: "Doctor not found" };
+        }
+
+
+        // Doktorun id'sine göre randevuları getiriyoruz
+        const appointments = await prisma.appointment.findMany({
+            where: {
+                doctor_id: doctorId,
+            },
+            select: {
+                id: true,
+                doctor_id: true,
+                patient_id: true,
+                patient: true,
+                examinations: true,
+                description: true,
+                appointment_date: true,
+                completed_at: true,
+                status: true,
+            }
+        });
+
+
+        return appointments;
+    } catch (error) {
+        console.error("Error getting doctor appointments:", error);
+        throw new Error("Could not fetch doctor appointments.");
+    }
 }

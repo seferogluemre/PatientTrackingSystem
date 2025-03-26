@@ -258,22 +258,19 @@ export const getAllPatients = async () => {
 
 export const getAllDoctors = async () => {
     try {
-        const doctors = await prisma.user.findMany({
-            where: {
-                role: "doctor"
-            },
+        const doctors = await prisma.doctor.findMany({
             select: {
                 tc_no: true,
                 id: true,
-                birthDate: true,
-                joined_at: true,
-                first_name: true,
-                last_name: true,
-                email: true,
-                phone: true,
-                Doctor: {
+                specialty: true,
+                user: {
                     select: {
-                        specialty: true,
+                        address: true,
+                        email: true,
+                        first_name: true,
+                        last_name: true,
+                        role: true,
+                        phone: true,
                     }
                 }
             }
@@ -291,18 +288,22 @@ export const getAllDoctors = async () => {
 export const userIsValidate = async (email: string) => {
     try {
         if (!email) {
-            throw new Error("Emaik No are required.");
+            throw new Error("Email is required.");
         }
 
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: {
+                email: email
+            },
         });
 
         return user;
     } catch (error) {
-
+        console.error("Error in userIsValidate:", error);
+        throw new Error("An error occurred while validating the user.");
     }
 }
+
 export const getSecretaryByUserTc = async (tc_no: string) => {
     try {
         const secretary = await prisma.secretary.findUnique({

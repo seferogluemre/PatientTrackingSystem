@@ -31,14 +31,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const { response } = error;
-    
+
     // Token geçersiz olduğunda otomatik logout
     if (response && response.status === 401) {
       localStorage.removeItem('clinicToken');
       localStorage.removeItem('clinicUser');
       window.location.href = '/';
     }
-    
+
     return Promise.reject(error);
   }
 );

@@ -2,7 +2,7 @@ import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { CreateAppointmentDto } from "src/dto/appointment/CreateAppointmentDto";
 import { UpdateAppointmentDto } from "src/dto/appointment/UpdateAppointmentDto";
-import { createAppointment, deleteAppointment, getAppointments, getAppointmentsByPatient, updateAppointment } from "src/models/appointment_model";
+import { createAppointment, deleteAppointment, getAppointmentByDoctor, getAppointments, getAppointmentsByPatient, updateAppointment } from "src/models/appointment_model";
 import { Request, Response } from "express";
 
 export const addAppointment = async (req: Request, res: Response) => {
@@ -103,3 +103,13 @@ export const listAppointments = async (req: Request, res: Response) => {
     }
 }
 
+export const listDoctorAppointments = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const appointments = await getAppointmentByDoctor(Number(id));
+        res.status(200).json({ results: appointments });
+    } catch (error) {
+        console.error("Error fetching doctor appointments:", error);
+        res.status(500).json({ error: "Could not fetch doctor appointments." });
+    }
+}

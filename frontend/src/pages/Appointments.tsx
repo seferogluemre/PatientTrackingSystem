@@ -358,6 +358,8 @@ const Appointments = () => {
     return null
   }
 
+  console.log("Doctrorrr", doctors)
+
   return (
     <Layout>
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
@@ -511,7 +513,7 @@ const Appointments = () => {
                   <SelectContent>
                     {doctors.map((doctor) => (
                       <SelectItem key={doctor.id} value={doctor.id.toString()}>
-                        Dr. {doctor.first_name} {doctor.last_name} ({doctor.Doctor[0].specialty})
+                        Dr. {doctor.user.first_name} {doctor.user.last_name} ({doctor.specialty})
                       </SelectItem>
                     ))}
                   </SelectContent>

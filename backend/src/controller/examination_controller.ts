@@ -3,7 +3,27 @@ import { validate } from "class-validator";
 import { Request, Response } from "express"
 import { CreateExaminationDto } from "src/dto/examination/CreateExaminationDto"
 import { UpdateExaminationDto } from "src/dto/examination/UpdateExaminationDto";
-import { createExamination, updateExamination, deleteExamination, getExaminationById, getExaminationsByDoctorId } from "src/models/examination_model";
+import { createExamination, updateExamination, deleteExamination, getExaminationById, getExaminationsByDoctorId, getExaminations } from "src/models/examination_model";
+
+export const examinationList = async (req: Request, res: Response) => {
+    try {
+        const examinations = await getExaminations();
+
+        if (examinations.length > 0) {
+            res.status(200).json({ results: examinations })
+        }
+
+        return res.status(200).json({
+            message: "Examination list Successfully",
+            results: examinations
+        });
+    } catch (error) {
+        console.error("Error log:", (error as Error).message)
+        return res.status(500).json({
+            error: (error as Error).message
+        })
+    }
+}
 
 export const addExamination = async (req: Request, res: Response) => {
     try {

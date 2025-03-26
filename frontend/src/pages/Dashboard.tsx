@@ -22,7 +22,7 @@ const Dashboard = () => {
 
       if (storedUser) {
         try {
-          // Parse the user from localStorage
+
           const parsedUser = JSON.parse(storedUser);
 
           // Use the stored user as is, with all the fields from the backend

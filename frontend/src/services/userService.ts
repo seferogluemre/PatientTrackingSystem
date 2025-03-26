@@ -44,20 +44,18 @@ export const getUser = async (tcNo: string) => {
 export const updateUser = async (tcNo: string, userData: UpdateUserData) => {
   try {
     const response = await api.patch(`/users/${tcNo}`, userData);
-    
+
     // Update user in localStorage to reflect changes
     const currentUser = JSON.parse(localStorage.getItem('clinicUser') || '{}');
-    const updatedUser = { 
-      ...currentUser, 
+    const updatedUser = {
+      ...currentUser,
       ...userData,
       // Make sure both formats are updated
       first_name: userData.first_name || currentUser.first_name,
       last_name: userData.last_name || currentUser.last_name,
-      firstName: userData.first_name || currentUser.first_name,
-      lastName: userData.last_name || currentUser.last_name
     };
     localStorage.setItem('clinicUser', JSON.stringify(updatedUser));
-    
+
     return response.data;
   } catch (error) {
     throw error;
@@ -76,6 +74,15 @@ export const deleteUser = async (tcNo: string) => {
 export const getPatients = async () => {
   try {
     const response = await api.get(`/users/patients`);
+    return response.data.results;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getDoctors = async () => {
+  try {
+    const response = await api.get(`/users/doctors`);
     return response.data.results;
   } catch (error) {
     throw error;

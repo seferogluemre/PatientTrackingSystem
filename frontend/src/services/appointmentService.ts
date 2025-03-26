@@ -68,3 +68,15 @@ export const cancelAppointment = async (id: number) => {
     throw error;
   }
 };
+
+export const getDoctorAppointments = async (doctorId: number) => {
+  try {
+    const response = await api.get(`/appointments/doctor/${doctorId}`);
+    console.log("Doktora ait randevularr:", response.data)
+    return {
+      results: response.data
+    };
+  } catch (error) {
+    throw error;
+  }
+};

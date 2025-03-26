@@ -188,3 +188,13 @@ export const getExaminationsByDoctorId = async (doctorId: number) => {
         throw new Error("Could not retrieve examinations.");
     }
 };
+
+export const getExaminations = async () => {
+    try {
+        const examinations = await prisma.examination.findMany();
+        return examinations;
+    } catch (error) {
+        console.error("Error getting examinations:", error);
+        throw new Error("Could not Error getting examinations.");
+    }
+}

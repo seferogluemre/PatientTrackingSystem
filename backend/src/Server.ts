@@ -38,6 +38,6 @@ app.use('/api/appointments', appointment_routes)
 app.use('/api/examinations', examination_routes)
 app.use('/api/clinics', clinic_routes)
 
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT || 3000, () => {
     console.log(`Sunucu ayakta!!! ${process.env.PORT}.`);
 });
