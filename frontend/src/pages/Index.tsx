@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -24,6 +24,17 @@ const Index = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('doctor');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('clinicToken');
+    const user = localStorage.getItem('clinicUser');
+    
+    if (token && user) {
+      localStorage.removeItem('clinicToken');
+      localStorage.removeItem('clinicUser');
+      toast.error('Oturumunuz kapatıldı');
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,8 +168,6 @@ const Index = () => {
                   />
                 </div>
               </div>
-
-
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
               </Button>

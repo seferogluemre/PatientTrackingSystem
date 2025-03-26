@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -16,8 +15,17 @@ const Layout = ({ children, requireAuth = true }: LayoutProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const token = localStorage.getItem('clinicToken');
     const storedUser = localStorage.getItem('clinicUser');
-    if (storedUser) {
+    
+    if (!token && requireAuth) {
+      // Token yoksa ve auth gerektiren bir sayfadaysa
+      toast.error('Oturumunuz kapatıldı, lütfen tekrar giriş yapın');
+      navigate('/');
+      return;
+    }
+    
+    if (storedUser && token) {
       setUser(JSON.parse(storedUser));
     } else if (requireAuth) {
       navigate('/');
@@ -26,6 +34,7 @@ const Layout = ({ children, requireAuth = true }: LayoutProps) => {
   }, [navigate, requireAuth]);
 
   const handleLogout = () => {
+    localStorage.removeItem('clinicToken');
     localStorage.removeItem('clinicUser');
     setUser(null);
     toast.success('Başarıyla çıkış yapıldı');

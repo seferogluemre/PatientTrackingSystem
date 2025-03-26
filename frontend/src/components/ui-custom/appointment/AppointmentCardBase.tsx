@@ -38,11 +38,11 @@ const AppointmentCardBase = ({
   onCompleteClick,
   onCancelClick
 }: AppointmentCardBaseProps) => {
-  const { status, appointmentDate, patient, doctor } = appointment;
+  const { status, appointment_date, patient, doctor } = appointment;
   const statusInfo = statusConfig[status];
 
-  const formattedDate = appointmentDate
-    ? format(new Date(appointmentDate), "dd MMM yyyy", { locale: tr })
+  const formattedDate = appointment_date
+    ? format(new Date(appointment_date), "dd MMM yyyy", { locale: tr })
     : "Geçersiz Tarih";
 
   return (
@@ -66,7 +66,7 @@ const AppointmentCardBase = ({
         <div className="space-y-2 mb-3">
           <div className="flex justify-between">
             <p className="text-sm font-medium text-slate-700">Hasta:</p>
-            <p className="text-sm text-slate-900">{patient ? `${patient.firstName} ${patient.lastName}` : 'Bilinmiyor'}</p>
+            <p className="text-sm text-slate-900">{patient ? `${patient.first_name} ${patient.last_name}` : 'Bilinmiyor'}</p>
           </div>
           <div className="flex justify-between">
             <p className="text-sm font-medium text-slate-700">Doktor:</p>

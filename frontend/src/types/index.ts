@@ -1,4 +1,3 @@
-
 export type UserRole = 'doctor' | 'secretary' | 'patient';
 
 export interface User {
@@ -51,9 +50,9 @@ export type AppointmentStatus = 'pending' | 'completed' | 'cancelled';
 
 export interface Appointment {
   id: number;
-  patientId: number;
-  doctorId: number;
-  appointmentDate: Date;
+  patient_id: number;
+  doctor_id: number;
+  appointment_date: Date;
   status: AppointmentStatus;
   description?: string;
   patient?: Patient;

@@ -24,6 +24,7 @@
     "express-rate-limit": "^7.5.0",
     "jsonwebtoken": "^9.0.2",
     "prisma": "^6.5.0",
+    "reflect-metadata": "^0.2.2",
     "tsx": "^4.19.3"
   },
   "devDependencies": {

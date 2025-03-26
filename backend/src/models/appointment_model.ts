@@ -180,18 +180,32 @@ export const getAppointments = async (status?: AppointmentStatus) => {
     const appointments = await prisma.appointment.findMany({
         where: filter,
         include: {
-            patient: true,
+            patient: {
+                select: {
+                    id: true,
+                    first_name: true,
+                    last_name: true,
+                    email: true,
+                    tc_no: true
+                }
+            },
             doctor: {
                 select: {
+                    id: true,
+                    specialty: true,
                     user: {
                         select: {
                             first_name: true,
-                            last_name: true
+                            last_name: true,
+                            email: true
                         }
                     }
                 }
             },
         },
+        orderBy: {
+            appointment_date: 'asc'
+        }
     });
 
     return appointments;

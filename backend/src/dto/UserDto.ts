@@ -1,4 +1,6 @@
+import "reflect-metadata";
 import { IsString, IsNotEmpty, IsDate, IsOptional } from "class-validator";
+import { Type } from "class-transformer";
 import { UserRole } from "src/types";
 
 export class CreateUserDto {
@@ -26,6 +28,7 @@ export class CreateUserDto {
     @IsNotEmpty()
     role!: UserRole;
 
+    @Type(() => Date)
     @IsDate()
     @IsNotEmpty()
     birthDate!: Date;

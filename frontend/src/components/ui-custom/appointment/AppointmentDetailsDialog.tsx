@@ -44,7 +44,7 @@ const AppointmentDetailsDialog = ({ appointment, isOpen, onOpenChange }: Appoint
   const [doctorExaminations, setDoctorExaminations] = useState<any[]>([]);
   const [loadingExamination, setLoadingExamination] = useState(false);
 
-  const { status, appointmentDate, patient, doctor } = appointment;
+  const { status, appointment_date, patient, doctor } = appointment;
   const statusInfo = statusConfig[status];
 
   useEffect(() => {
@@ -92,8 +92,8 @@ const AppointmentDetailsDialog = ({ appointment, isOpen, onOpenChange }: Appoint
     }
   };
 
-  const formattedDate = appointmentDate
-    ? format(new Date(appointmentDate), "dd MMM yyyy", { locale: tr })
+  const formattedDate = appointment_date
+    ? format(new Date(appointment_date), "dd MMM yyyy", { locale: tr })
     : "Geçersiz Tarih";
 
   console.log()
@@ -118,7 +118,7 @@ const AppointmentDetailsDialog = ({ appointment, isOpen, onOpenChange }: Appoint
 
             <div className="flex justify-between">
               <p className="font-medium">Hasta:</p>
-              <p>{patient ? `${patient.firstName} ${patient.lastName}` : 'Bilinmiyor'}</p>
+              <p>{patient ? `${patient.first_name} ${patient.last_name}` : 'Bilinmiyor'}</p>
             </div>
 
             <div className="flex justify-between">
