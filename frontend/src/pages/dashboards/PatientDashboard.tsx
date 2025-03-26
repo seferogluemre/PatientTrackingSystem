@@ -28,7 +28,6 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import AppointmentCard from '@/components/ui-custom/AppointmentCard';
 import StatsCard from '@/components/ui-custom/StatsCard';
 import { User, Appointment, Patient, AppointmentStatus, Examination } from '@/types';
 import { getPatientAppointments } from '@/services/appointmentService';
@@ -83,9 +82,8 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
         setLoading(true);
         try {
           const response = await getPatientAppointments(user.id);
-
           if (response && response.results) {
-            const formattedAppointments: Appointment[] = response.results.map((appt: ApiAppointment) => {
+            const formattedAppointments: Appointment[] = response.results.results.map((appt: ApiAppointment) => {
               let doctorInfo = appt.doctor || {
                 id: appt.doctor_id,
                 specialty: '',
@@ -150,6 +148,8 @@ const PatientDashboard = ({ user }: PatientDashboardProps) => {
             const past = formattedAppointments
               .filter(appt => new Date(appt.appointmentDate) < today || appt.status === 'completed' || appt.status === 'cancelled')
               .sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
+
+            console.log("past", past)
 
             setPastAppointments(past);
           } else {
