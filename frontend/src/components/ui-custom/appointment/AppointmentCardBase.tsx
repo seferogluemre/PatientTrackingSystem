@@ -32,12 +32,12 @@ const statusConfig = {
   },
 };
 
-const AppointmentCardBase = ({ 
-  appointment, 
-  userRole, 
-  onViewDetails, 
-  onCompleteClick, 
-  onCancelClick 
+const AppointmentCardBase = ({
+  appointment,
+  userRole,
+  onViewDetails,
+  onCompleteClick,
+  onCancelClick
 }: AppointmentCardBaseProps) => {
   const { status, appointmentDate, patient, doctor } = appointment;
   const statusInfo = statusConfig[status];

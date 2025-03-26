@@ -34,7 +34,9 @@ export const getExamination = async (id: number) => {
 
 export const getDoctorExaminations = async (doctorId: number) => {
   try {
+    console.log("DOKTOR SERVİS", doctorId)
     const response = await api.get(`/examinations/doctor/${doctorId}`);
+    console.log("servis response", response.data)
     return response.data.data;
   } catch (error) {
     throw error;

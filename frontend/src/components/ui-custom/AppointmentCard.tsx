@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { Appointment, AppointmentStatus } from '@/types';
-import { 
+import {
   AppointmentCardBase,
   AppointmentDetailsDialog,
   AppointmentCompleteDialog,
@@ -44,7 +44,7 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
 
   return (
     <>
-      <AppointmentCardBase 
+      <AppointmentCardBase
         appointment={appointment}
         userRole={userRole}
         onViewDetails={() => setIsDetailsOpen(true)}
@@ -52,19 +52,19 @@ const AppointmentCard = ({ appointment, userRole, onStatusChange }: AppointmentC
         onCancelClick={() => setIsCancelDialogOpen(true)}
       />
 
-      <AppointmentDetailsDialog 
+      <AppointmentDetailsDialog
         appointment={appointment}
         isOpen={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
       />
 
-      <AppointmentCompleteDialog 
+      <AppointmentCompleteDialog
         isOpen={isCompleteDialogOpen}
         onOpenChange={setIsCompleteDialogOpen}
         onComplete={handleComplete}
       />
 
-      <AppointmentCancelDialog 
+      <AppointmentCancelDialog
         isOpen={isCancelDialogOpen}
         onOpenChange={setIsCancelDialogOpen}
         onCancel={handleCancel}

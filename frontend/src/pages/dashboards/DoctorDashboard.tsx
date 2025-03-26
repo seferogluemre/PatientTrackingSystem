@@ -540,8 +540,9 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
             console.log("RESPONSEEEE", response.results.results)
 
             if (response) {
-              // İlk doktor nesnesinden appointments dizisini al
+
               const doctorAppointments = response.results.results;
+
               console.log("Doktor randevuları:", doctorAppointments);
               if (!doctorAppointments || doctorAppointments.length === 0) {
                 console.log("Randevu bulunamadı");

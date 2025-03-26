@@ -12,7 +12,6 @@ export interface User {
   profilePicture?: string;
   tc_no?: string;
   birthDate?: string;
-  // Aliases for frontend compatibility
   firstName?: string;
   lastName?: string;
   tcNo?: string;

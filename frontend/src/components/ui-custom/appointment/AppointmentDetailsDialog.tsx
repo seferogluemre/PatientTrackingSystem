@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -14,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Appointment } from '@/types';
-import { getExamination } from '@/services/examinationService';
+import { getDoctorExaminations, getExamination } from '@/services/examinationService';
 
 interface AppointmentDetailsDialogProps {
   appointment: Appointment;
@@ -42,6 +41,7 @@ const statusConfig = {
 
 const AppointmentDetailsDialog = ({ appointment, isOpen, onOpenChange }: AppointmentDetailsDialogProps) => {
   const [examinationData, setExaminationData] = useState<any>(null);
+  const [doctorExaminations, setDoctorExaminations] = useState<any[]>([]);
   const [loadingExamination, setLoadingExamination] = useState(false);
 
   const { status, appointmentDate, patient, doctor } = appointment;
@@ -57,11 +57,33 @@ const AppointmentDetailsDialog = ({ appointment, isOpen, onOpenChange }: Appoint
   const fetchExaminationData = async () => {
     try {
       setLoadingExamination(true);
-      // Burada randevu ID'sine göre examination bilgisini çekiyoruz
-      // Backend'de bu ilişki kurulmuşsa çalışacaktır
+
+      // localStorage'dan clinicUser bilgisini al ve JSON olarak parse et
+      const clinicUserStr = localStorage.getItem('clinicUser');
+      if (!clinicUserStr) {
+        console.error("Kullanıcı bilgisi bulunamadı");
+        return;
+      }
+
+      const clinicUser = JSON.parse(clinicUserStr);
+
+      // Doktorun tüm muayenelerini getir
+      const doctorExams = await getDoctorExaminations(clinicUser.id);
+      setDoctorExaminations(doctorExams);
+      console.log(doctorExams)
+      // Bu randevuya ait muayene varsa detaylarını getir
       if (appointment.examination?.id) {
         const data = await getExamination(appointment.examination.id);
         setExaminationData(data);
+      } else {
+        // Bu randevuya ait muayene doktorun muayeneleri arasında mı?
+        const appointmentExam = doctorExams.find(
+          (exam) => exam.appointment.id === appointment.id
+        );
+
+        if (appointmentExam) {
+          setExaminationData(appointmentExam);
+        }
       }
     } catch (error) {
       console.error("Examination bilgisi getirilemedi:", error);
@@ -73,6 +95,8 @@ const AppointmentDetailsDialog = ({ appointment, isOpen, onOpenChange }: Appoint
   const formattedDate = appointmentDate
     ? format(new Date(appointmentDate), "dd MMM yyyy", { locale: tr })
     : "Geçersiz Tarih";
+
+  console.log()
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -128,7 +152,7 @@ const AppointmentDetailsDialog = ({ appointment, isOpen, onOpenChange }: Appoint
           {status === 'completed' && (
             <div className="space-y-2">
               <p className="font-medium">Teşhis ve Tedavi:</p>
-              
+
               {loadingExamination ? (
                 <div className="text-center p-3">
                   <p className="text-sm text-slate-500">Yükleniyor...</p>

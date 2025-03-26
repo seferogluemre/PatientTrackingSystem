@@ -7,7 +7,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import { format } from "date-fns"
 import { tr } from "date-fns/locale"
 import { useToast } from "@/hooks/use-toast"
-import { FileText, FilePlus, Search, CalendarDays, ChevronLeft, Edit, Stethoscope, Pill, Clock } from "lucide-react"
+import { FileText, FilePlus, Search, CalendarDays, ChevronLeft, Edit, Stethoscope, Pill, Clock, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -21,12 +21,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { type Examination, User } from "@/types"
 import { getExamination, addExamination, updateExamination, getDoctorExaminations } from "@/services/examinationService"
 import { getAppointment } from "@/services/appointmentService"
 import { ExaminationCard } from "@/components/ui-custom/appointment"
+import { Examination, UserRole } from "@/types"
 
 const Examinations = () => {
+
   const navigate = useNavigate()
   const { toast } = useToast()
   const { id } = useParams()
@@ -35,10 +36,11 @@ const Examinations = () => {
   const [examinations, setExaminations] = useState<any[]>([])
   const [recentExaminations, setRecentExaminations] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<UserRole | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
   const [formData, setFormData] = useState({
     appointmentId: 0,
     diagnosis: "",
@@ -46,7 +48,6 @@ const Examinations = () => {
   })
 
   useEffect(() => {
-    // Get user from localStorage
     const storedUser = localStorage.getItem("clinicUser")
     if (storedUser) {
       setUser(JSON.parse(storedUser))
@@ -70,7 +71,7 @@ const Examinations = () => {
       if (userData.id) {
         const data = await getDoctorExaminations(userData.id)
         setExaminations(data)
-        setRecentExaminations(data.slice(0, 6)) // Get the most recent 6
+        setRecentExaminations(data.slice(0, 6))
       }
     } catch (error) {
       console.error("Failed to fetch examinations:", error)
@@ -210,7 +211,6 @@ const Examinations = () => {
         </div>
       )
     }
-
     return (
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex justify-between items-center">
@@ -336,9 +336,9 @@ const Examinations = () => {
     )
   }
 
-  // For doctors and secretaries - ability to create new examinations
   return (
     <div className="container mx-auto py-6 space-y-6">
+
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Muayene Kayıtları</h1>
         <Button onClick={() => setIsAddDialogOpen(true)}>
@@ -500,4 +500,3 @@ const Examinations = () => {
 }
 
 export default Examinations
-

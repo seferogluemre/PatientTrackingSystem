@@ -139,10 +139,43 @@ export const deleteExamination = async (id: number) => {
 
 export const getExaminationsByDoctorId = async (doctorId: number) => {
     try {
+
+        const existingDoctor = await prisma.user.findUnique({
+            where: {
+                id: doctorId
+            },
+            select: {
+                tc_no: true
+            }
+        });
+
+        if (!existingDoctor) {
+            throw new Error("Doktor bulunamadı.");
+        }
+
+        // Doktorun tc_no'sunu alıyoruz
+        const doctorTcNo = existingDoctor.tc_no;
+
+        const doctor = await prisma.doctor.findUnique({
+            where: {
+                tc_no: doctorTcNo
+            },
+            select: {
+                id: true
+            }
+        });
+
+        if (!doctor) {
+            throw new Error("Doktor (doctor tablosunda) bulunamadı.");
+        }
+
+        // Doctor tablosundan gelen id'yi alıyoruz
+        const doctorDbId = doctor.id;
+
         const examinations = await prisma.examination.findMany({
             where: {
                 appointment: {
-                    doctor_id: doctorId
+                    doctor_id: doctorDbId  // Burada artık doğru id kullanılıyor
                 }
             },
             include: {
@@ -181,6 +214,8 @@ export const getExaminationsByDoctorId = async (doctorId: number) => {
                 id: 'desc'
             }
         });
+
+        console.log("Bulunan muayeneler:", examinations);
 
         return examinations;
     } catch (error) {
