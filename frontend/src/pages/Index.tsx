@@ -158,19 +158,6 @@ const Index = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="role">Rol</Label>
-                <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Rol seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="doctor">Doktor</SelectItem>
-                    <SelectItem value="secretary">Sekreter</SelectItem>
-                    <SelectItem value="patient">Hasta</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
@@ -184,33 +171,6 @@ const Index = () => {
               animate="visible"
               custom={1}
             >
-              <p className="text-center text-sm text-slate-500 mb-4">veya hızlı demo giriş</p>
-              <div className="grid grid-cols-3 gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => handleQuickLogin('doctor')}
-                  disabled={loading}
-                  className="text-xs py-1"
-                >
-                  Doktor
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleQuickLogin('secretary')}
-                  disabled={loading}
-                  className="text-xs py-1"
-                >
-                  Sekreter
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleQuickLogin('patient')}
-                  disabled={loading}
-                  className="text-xs py-1"
-                >
-                  Hasta
-                </Button>
-              </div>
             </motion.div>
           </div>
         </motion.div>

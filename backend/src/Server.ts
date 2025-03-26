@@ -24,5 +24,5 @@ app.use('/api/examinations', examination_routes)
 app.use('/api/clinics', clinic_routes)
 
 app.listen(process.env.PORT || 3000, () => {
-    console.log(`Sunucu ayakta!!! ${process.env.PORT}.`);
+    console.log(`Sunucu ayakta reis!!! ${process.env.PORT}.`);
 });

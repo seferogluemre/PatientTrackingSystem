@@ -123,7 +123,7 @@ const AppointmentDetailsDialog = ({ appointment, isOpen, onOpenChange }: Appoint
 
             <div className="flex justify-between">
               <p className="font-medium">Doktor:</p>
-              <p>{doctor && doctor.user ? `Dr. ${doctor.user.firstName} ${doctor.user.lastName}` : 'Bilinmiyor'}</p>
+              <p>{doctor && doctor.user ? `Dr. ${doctor.user.first_name} ${doctor.user.last_name}` : 'Bilinmiyor'}</p>
             </div>
 
             {doctor && (

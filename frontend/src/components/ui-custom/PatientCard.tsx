@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -25,17 +24,23 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const calculateAge = (dob: string | Date) => {
-    console.log("Gelen doğum tarihi:", dob);
+    if (!dob) return null;
+    
     const birthDate = new Date(dob);
-
     if (isNaN(birthDate.getTime())) {
       console.error("Invalid date:", dob);
-      return "Invalid Date";
+      return null;
     }
 
-    const diff = Date.now() - birthDate.getTime();
-    const ageDate = new Date(diff);
-    return Math.abs(ageDate.getUTCFullYear() - 1970);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
   };
 
   return (
@@ -51,9 +56,8 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
                 {patient.first_name} {patient.last_name}
               </h3>
               <p className="text-sm text-slate-500">
-                {patient.user?.birthDate ? calculateAge(patient?.user?.birthDate) + " yaşında" : "Yaş bilgisi yok"}
+                {patient.user?.birthDate ? `${calculateAge(patient.user.birthDate)} yaşında` : "Yaş bilgisi yok"}
               </p>
-
             </div>
           </div>
 
@@ -61,11 +65,10 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
             <div className="flex items-start gap-2">
               <Calendar className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-slate-600">
-                {patient?.user?.birthDate
+                {patient.user?.birthDate
                   ? format(new Date(patient.user.birthDate), 'dd MMMM yyyy', { locale: tr })
                   : "Tarih bulunmamaktadır"}
               </p>
-
             </div>
 
             {patient.phone && (

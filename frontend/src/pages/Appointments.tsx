@@ -140,40 +140,45 @@ const Appointments = () => {
         const appointmentsData = await response.json()
 
         if (appointmentsData && appointmentsData.results) {
-          const formattedAppointments = appointmentsData.results.map((appointment: ApiAppointment) => ({
-            id: appointment.id,
-            patientId: appointment.patient_id,
-            doctorId: appointment.doctor_id,
-            appointmentDate: new Date(appointment.appointment_date),
-            status: appointment.status,
-            description: appointment.description,
-            patient: appointment.patient
-              ? {
-                id: appointment.patient.id,
-                firstName: appointment.patient.first_name,
-                lastName: appointment.patient.last_name,
-                email: appointment.patient.email,
-                dob: new Date(),
-                phone: "",
-                address: "",
-              }
-              : undefined,
-            doctor: appointment.doctor
-              ? {
-                id: appointment.doctor.id,
-                userId: 0,
-                specialty: appointment.doctor.specialty,
-                clinicId: appointment.doctor.clinic_id,
-                user: {
-                  id: 0,
-                  firstName: "",
-                  lastName: "",
-                  email: "",
-                  role: "doctor",
-                },
-              }
-              : undefined,
-          }))
+          const formattedAppointments = appointmentsData.results.map((appointment: ApiAppointment) => {
+            // Önce doktoru bul
+            const doctor = doctors.find(d => d.id === appointment.doctor_id);
+            
+            return {
+              id: appointment.id,
+              patientId: appointment.patient_id,
+              doctorId: appointment.doctor_id,
+              appointmentDate: new Date(appointment.appointment_date),
+              status: appointment.status,
+              description: appointment.description,
+              patient: appointment.patient
+                ? {
+                  id: appointment.patient.id,
+                  firstName: appointment.patient.first_name,
+                  lastName: appointment.patient.last_name,
+                  email: appointment.patient.email,
+                  dob: new Date(),
+                  phone: "",
+                  address: "",
+                }
+                : undefined,
+              doctor: doctor
+                ? {
+                  id: doctor.id,
+                  userId: doctor.userId || 0,
+                  specialty: doctor.specialty || "",
+                  clinicId: doctor.clinicId || 0,
+                  user: {
+                    id: doctor.userId || 0,
+                    first_name: doctor.user?.first_name || "",
+                    last_name: doctor.user?.last_name || "",
+                    email: doctor.user?.email || "",
+                    role: "doctor",
+                  },
+                }
+                : undefined,
+            };
+          });
 
           setAppointments(formattedAppointments)
           setFilteredAppointments(formattedAppointments)
@@ -192,7 +197,7 @@ const Appointments = () => {
     }
 
     fetchAppointments()
-  }, [user])
+  }, [user, doctors])
 
   useEffect(() => {
     if (appointments.length) {

@@ -1,4 +1,3 @@
-
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { CalendarClock, CheckCircle, XCircle, Clock } from 'lucide-react';
@@ -72,7 +71,7 @@ const AppointmentCardBase = ({
           <div className="flex justify-between">
             <p className="text-sm font-medium text-slate-700">Doktor:</p>
             <p className="text-sm text-slate-900">
-              {doctor && doctor.user ? `Dr. ${doctor.user.firstName} ${doctor.user.lastName}` : 'Bilinmiyor'}
+              {doctor && doctor.user ? `Dr. ${doctor.user.first_name} ${doctor.user.last_name}` : 'Bilinmiyor'}
             </p>
           </div>
           {doctor && (
