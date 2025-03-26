@@ -1,4 +1,3 @@
-
 "use client"
 
 import type React from "react"
@@ -55,9 +54,18 @@ const NewExamination = () => {
                 }
 
                 setAppointment(data)
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Randevu bilgileri yüklenirken hata:", error)
-                toast.error("Randevu bilgileri yüklenemedi")
+                
+                if (error.message === 'Randevu bulunamadı') {
+                    toast.error("Randevu bulunamadı")
+                    navigate("/appointments")
+                } else if (error.response?.status === 401) {
+                    toast.error("Oturum süreniz dolmuş")
+                    navigate("/")
+                } else {
+                    toast.error("Randevu bilgileri yüklenemedi")
+                }
             } finally {
                 setLoading(false)
             }

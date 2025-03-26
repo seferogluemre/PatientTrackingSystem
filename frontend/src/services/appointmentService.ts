@@ -1,4 +1,3 @@
-
 import api from './api';
 
 interface CreateAppointmentData {
@@ -24,9 +23,18 @@ export const createAppointment = async (appointmentData: CreateAppointmentData) 
 
 export const getAppointment = async (id: number) => {
   try {
-    const response = await api.get(`/appointments/${id}`);
-    return response.data.data;
+    const response = await api.get('/appointments');
+      
+    // results içinden ilgili randevuyu bul
+    const appointment = response.data.results.find((apt: any) => apt.id === id);
+    
+    if (!appointment) {
+      throw new Error('Randevu bulunamadı');
+    }
+    
+    return appointment;
   } catch (error) {
+    console.error("getAppointment error:", error);
     throw error;
   }
 };
