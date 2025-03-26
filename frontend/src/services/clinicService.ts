@@ -9,6 +9,15 @@ interface UpdateClinicData {
   name?: string;
 }
 
+export const getClinics = async () => {
+  try {
+    const response = await api.get('/clinics');
+    return response.data.results;
+  } catch (error) {
+    throw error;
+  }
+}
+
 export const addClinic = async (clinicData: CreateClinicData) => {
   try {
     const response = await api.post('/clinics', clinicData);
@@ -44,3 +53,4 @@ export const deleteClinic = async (id: number) => {
     throw error;
   }
 };
+

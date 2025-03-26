@@ -1,3 +1,4 @@
+
 "use client"
 
 import type React from "react"
@@ -7,18 +8,20 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { format } from "date-fns"
 import { tr } from "date-fns/locale"
 import { toast } from "sonner"
-import { ChevronLeft, Save, User, CalendarDays, Stethoscope, Pill, AlertCircle } from "lucide-react"
+import { ChevronLeft, Save, User, CalendarDays, Stethoscope, Pill, AlertCircle, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { getAppointment, editAppointment } from "@/services/appointmentService"
+import { generateWithGemini } from "@/services/aiService"
 
 const NewExamination = () => {
     const navigate = useNavigate()
     const location = useLocation()
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    const [generating, setGenerating] = useState(false)
     const [appointment, setAppointment] = useState<any>(null)
     const [formData, setFormData] = useState({
         diagnosis: "",
@@ -113,6 +116,65 @@ const NewExamination = () => {
         }
     }
 
+    const handleGenerateAI = async () => {
+        if (!appointment) return
+
+        setGenerating(true)
+        try {
+            const patientInfo = `
+                Hasta Adı: ${appointment.patient?.first_name} ${appointment.patient?.last_name}
+                Şikayet: ${appointment.description || "Belirtilmemiş"}
+            `;
+
+            const prompt = `Sen bir doktorsun. Aşağıdaki hasta bilgilerine göre olası bir teşhis ve tedavi planı oluştur. 
+            Cevabını şu formatta ver:
+            
+            Teşhis: [detaylı teşhis]
+            
+            Tedavi: [detaylı tedavi planı]
+            
+            Not: [varsa ek öneriler]
+            
+            Hasta Bilgileri:
+            ${patientInfo}`;
+
+            const result = await generateWithGemini(prompt);
+
+            if (result.candidates && result.candidates[0].content.parts[0].text) {
+                const aiResponse = result.candidates[0].content.parts[0].text;
+
+                // Parse AI response to extract sections
+                const diagnosisMatch = aiResponse.match(/Teşhis:(.*?)(?=Tedavi:|$)/s);
+                const treatmentMatch = aiResponse.match(/Tedavi:(.*?)(?=Not:|$)/s);
+                const notesMatch = aiResponse.match(/Not:(.*?)$/s);
+
+                const newFormData = { ...formData };
+
+                if (diagnosisMatch && diagnosisMatch[1]) {
+                    newFormData.diagnosis = diagnosisMatch[1].trim();
+                }
+
+                if (treatmentMatch && treatmentMatch[1]) {
+                    newFormData.treatment = treatmentMatch[1].trim();
+                }
+
+                if (notesMatch && notesMatch[1]) {
+                    newFormData.notes = notesMatch[1].trim();
+                }
+
+                setFormData(newFormData);
+                toast.success("AI ile teşhis ve tedavi önerisi oluşturuldu");
+            } else {
+                throw new Error("AI yanıtı beklenen formatta değil");
+            }
+        } catch (error) {
+            console.error("AI içerik oluşturma hatası:", error);
+            toast.error("AI içerik oluşturulamadı");
+        } finally {
+            setGenerating(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -120,6 +182,8 @@ const NewExamination = () => {
             </div>
         )
     }
+
+    handleGenerateAI();
 
     return (
         <div className="container mx-auto py-6 space-y-6">
@@ -131,10 +195,9 @@ const NewExamination = () => {
                     </Button>
                     <h1 className="text-2xl font-bold">Yeni Muayene Kaydı</h1>
                 </div>
-                <Button onClick={handleSubmit} disabled={submitting}>
-                    <Save className="mr-2 h-4 w-4" />
-                    {submitting ? "Kaydediliyor..." : "Kaydet"}
-                </Button>
+                <div className="space-x-2 flex">
+                    <a onClick={handleGenerateAI}>ee</a>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -246,4 +309,3 @@ const NewExamination = () => {
 }
 
 export default NewExamination
-

@@ -58,7 +58,7 @@ model Doctor {
   specialty    String
   clinic_id    Int
   user         User          @relation(fields: [tc_no], references: [tc_no])
-  clinic       Clinic        @relation(fields: [clinic_id], references: [id])
+  clinic       Clinic        @relation(fields: [clinic_id], references: [id], onDelete: SetDefault)
   tc_no        String        @unique @db.VarChar(11)
   appointments Appointment[]
   examinations Examination[]

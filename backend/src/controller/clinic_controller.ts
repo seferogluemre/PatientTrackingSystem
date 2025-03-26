@@ -3,8 +3,7 @@ import { validate } from "class-validator"
 import { Request, Response } from "express"
 import { CreateClinicDto } from "src/dto/clinic/CreateClinicDto"
 import { UpdateClinicDto } from "src/dto/clinic/UpdateClinicDto"
-import { createClinic, deleteClinic, getClinicById, updateClinic } from "src/models/clinic_model"
-
+import { createClinic, deleteClinic, getClinicById, getClinics, updateClinic } from "src/models/clinic_model"
 export const addClinic = async (req: Request, res: Response) => {
     try {
         const clinicDto = plainToInstance(CreateClinicDto, req.body)
@@ -91,6 +90,24 @@ export const getClinic = async (req: Request, res: Response) => {
         return res.status(200).json({
             message: "Clinic fetched successfully",
             data: clinic
+        });
+    } catch (error) {
+        console.error("Error log:", (error as Error).message);
+        return res.status(500).json({ error: (error as Error).message });
+    }
+}
+
+export const listClinic = async (req: Request, res: Response) => {
+    try {
+
+        const clinics = await getClinics()
+
+        if (!clinics) {
+            return res.status(404).json({ message: "Clinics not found" });
+        }
+
+        return res.status(200).json({
+            results: clinics
         });
     } catch (error) {
         console.error("Error log:", (error as Error).message);

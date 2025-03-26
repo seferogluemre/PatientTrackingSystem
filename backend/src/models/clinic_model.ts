@@ -8,6 +8,15 @@ interface CreateClinicBody {
 interface UpdateClinicBody {
     name: string;
 }
+export const getClinics = async () => {
+    try {
+        const clinics = await prisma.clinic.findMany();
+        return clinics;
+    } catch (error) {
+        console.error("Error fetching clinic:", error);
+        throw new Error("Could not fetch clinic due to an unknown error");
+    }
+}
 
 export const createClinic = async (body: CreateClinicBody) => {
     try {
