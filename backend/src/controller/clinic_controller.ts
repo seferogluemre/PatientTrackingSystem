@@ -1,22 +1,8 @@
-import { plainToInstance } from "class-transformer"
-import { validate } from "class-validator"
 import { Request, Response } from "express"
-import { CreateClinicDto, UpdateClinicDto } from "src/dto/CreateClinicDto"
 import { createClinic, deleteClinic, getClinicById, getClinics, updateClinic } from "src/models/clinic_model"
 export const addClinic = async (req: Request, res: Response): Promise<void> => {
     try {
-        const clinicDto = plainToInstance(CreateClinicDto, req.body)
-
-        const errors = await validate(clinicDto)
-
-        if (errors.length > 0) {
-            res.status(403).json({
-                message: "Validation error",
-                errors: errors.map(err => err.constraints)
-            });
-        }
-
-        const createdClinic = await createClinic(clinicDto)
+        const createdClinic = await createClinic(req.body)
 
         res.status(201).json({ message: "Clinic Created Successfully", data: createdClinic });
     } catch (error) {
@@ -30,22 +16,13 @@ export const addClinic = async (req: Request, res: Response): Promise<void> => {
 export const editClinic = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const clinicDto = plainToInstance(UpdateClinicDto, { ...req.body, id });
-
-        const errors = await validate(clinicDto);
-        if (errors.length > 0) {
-            res.status(403).json({
-                message: "Validation error",
-                errors: errors.map(err => err.constraints)
-            });
-        }
         const clinicExists = await getClinicById(Number(id))
 
         if (!clinicExists) {
             res.status(404).json({ message: "Clinic not found" });
         }
 
-        const updatedClinic = await updateClinic(Number(id), clinicDto)
+        const updatedClinic = await updateClinic(Number(id), req.body)
 
         res.status(200).json({
             message: "Clinic updated successfully",

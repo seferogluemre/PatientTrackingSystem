@@ -5,32 +5,17 @@ import appointment_routes from './routes/appointment_routes'
 import examination_routes from './routes/examination_routes'
 import clinic_routes from './routes/clinic_routes'
 import auth_routes from './routes/auth_routes'
-import rateLimit from 'express-rate-limit'
+import { globalLimiter as rateLimitConfig } from './config/rateLimitConfig'
 import cors from 'cors';
+import { corsOptions } from './config/corsOption'
 
 const app = express();
 dotenv.config();
 
 app.use(express.json());
 
-const corsOptions = {
-    origin: '*',
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-};
-
 app.use(cors(corsOptions));
-
-const globalLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000,
-    max: 50,
-    message: { error: "Çok fazla istek yaptınız, lütfen daha sonra tekrar deneyin." },
-    headers: true,
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-app.use(globalLimiter);
+app.use(rateLimitConfig);
 
 app.use('/api/auth', auth_routes)
 app.use('/api/users', user_routes)

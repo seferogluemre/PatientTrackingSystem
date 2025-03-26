@@ -1,22 +1,9 @@
-import { plainToInstance } from "class-transformer";
-import { validate } from "class-validator";
-import { CreateAppointmentDto, UpdateAppointmentDto } from "src/dto/AppointmentDto";
 import { createAppointment, deleteAppointment, getAppointmentByDoctor, getAppointments, getAppointmentsByPatient, updateAppointment } from "src/models/appointment_model";
 import { Request, Response } from "express";
 
 export const addAppointment = async (req: Request, res: Response): Promise<void> => {
     try {
-        const appointmentDto = plainToInstance(CreateAppointmentDto, req.body);
-        const errors = await validate(appointmentDto);
-
-        if (errors.length > 0) {
-            res.status(403).json({
-                message: "Validation error",
-                errors: errors.map(err => err.constraints)
-            });
-        }
-
-        const createdAppointment = await createAppointment(appointmentDto);
+        const createdAppointment = await createAppointment(req.body);
         res.status(201).json({ message: "Appointment Created Successfully", data: createdAppointment });
     } catch (error) {
         console.error("Error log:", (error as Error).message);
@@ -28,21 +15,7 @@ export const editAppointment = async (req: Request, res: Response): Promise<void
     try {
         const { id } = req.params;
 
-        if (!id) {
-            res.status(400).json({ message: "Appointment ID not found" });
-        }
-
-        const updateAppointmentDto = plainToInstance(UpdateAppointmentDto, req.body);
-        const errors = await validate(updateAppointmentDto);
-
-        if (errors.length > 0) {
-            res.status(403).json({
-                message: "Validation error",
-                errors: errors.map(err => err.constraints)
-            });
-        }
-
-        const updatedAppointment = await updateAppointment(Number(id), updateAppointmentDto);
+        const updatedAppointment = await updateAppointment(Number(id), req.body);
         if (updatedAppointment) {
             res.status(200).json({ message: "Appointment Updated Successfully", data: updatedAppointment });
         } else {

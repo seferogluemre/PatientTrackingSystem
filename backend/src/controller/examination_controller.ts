@@ -1,7 +1,4 @@
-import { plainToInstance } from "class-transformer"
-import { validate } from "class-validator";
 import { Request, Response } from "express"
-import { CreateExaminationDto, UpdateExaminationDto } from "src/dto/CreateExaminationDto"
 import { createExamination, updateExamination, deleteExamination, getExaminationById, getExaminationsByDoctorId, getExaminations } from "src/models/examination_model";
 
 export const examinationList = async (req: Request, res: Response): Promise<void> => {
@@ -26,18 +23,7 @@ export const examinationList = async (req: Request, res: Response): Promise<void
 
 export const addExamination = async (req: Request, res: Response): Promise<void> => {
     try {
-        const examinationDto = plainToInstance(CreateExaminationDto, req.body);
-
-        const errors = await validate(examinationDto)
-
-        if (errors.length > 0) {
-            res.status(403).json({
-                message: "Validation Error",
-                error: errors.map(err => err.constraints)
-            })
-        }
-
-        const createdExamination = await createExamination(examinationDto);
+        const createdExamination = await createExamination(req.body);
 
         res.status(201).json({
             message: "Examination Created Successfully",
@@ -55,24 +41,7 @@ export const editExamination = async (req: Request, res: Response): Promise<void
     try {
         const { id } = req.params;
 
-        if (!id) {
-            res.status(400).json({
-                message: "examination id required "
-            })
-        }
-
-        const examinationDto = plainToInstance(UpdateExaminationDto, req.body);
-
-        const errors = await validate(examinationDto);
-
-        if (errors.length > 0) {
-            res.status(403).json({
-                message: "Validation Error",
-                error: errors.map(err => err.constraints)
-            })
-        }
-
-        const updatedExamination = await updateExamination(Number(id), examinationDto);
+        const updatedExamination = await updateExamination(Number(id), req.body);
 
         res.status(200).json({
             message: "Examination Updated Successfully",
