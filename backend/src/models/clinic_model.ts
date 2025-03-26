@@ -1,13 +1,8 @@
 import { PrismaClient } from "@prisma/client";
+import { CreateClinicBody, UpdateClinicBody } from "src/types";
 
 const prisma = new PrismaClient()
 
-interface CreateClinicBody {
-    name: string
-}
-interface UpdateClinicBody {
-    name: string;
-}
 
 export const getClinics = async () => {
     try {

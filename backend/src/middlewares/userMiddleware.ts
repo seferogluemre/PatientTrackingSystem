@@ -28,8 +28,8 @@ export const validateDto = (dtoClass: any) => {
 
 /**
  * `tc` parametresinin eksik olup olmadığını kontrol eder
- */
-*/
+ **/
+
 export const checkTcParam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { tc } = req.params;
 

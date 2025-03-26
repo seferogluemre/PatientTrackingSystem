@@ -17,6 +17,7 @@ import { getAppointment, editAppointment } from "@/services/appointmentService"
 import { generateWithGemini } from "@/services/aiService"
 
 const NewExamination = () => {
+
     const navigate = useNavigate()
     const location = useLocation()
     const [loading, setLoading] = useState(true)

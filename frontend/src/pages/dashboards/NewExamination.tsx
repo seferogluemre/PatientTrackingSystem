@@ -30,8 +30,10 @@ const NewExamination = () => {
     })
 
     // Parse appointmentId from query params
-    const queryParams = new URLSearchParams(location.search)
+    const queryParams = new URLSearchParams(window.location.search)
+    console.log("wueyr", queryParams)
     const appointmentId = queryParams.get("appointmentId")
+    console.log("appoıintmentt idd", appointmentId)
 
     useEffect(() => {
         const fetchAppointmentData = async () => {
@@ -79,7 +81,6 @@ const NewExamination = () => {
 
         setSubmitting(true)
         try {
-            // 1. Muayene kaydı oluştur
             const examinationData = {
                 appointment_id: Number(appointmentId),
                 diagnosis: formData.diagnosis,
@@ -94,7 +95,6 @@ const NewExamination = () => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("clinicToken")}`,
                 },
                 body: JSON.stringify(examinationData),
             })
@@ -126,7 +126,7 @@ const NewExamination = () => {
                 Şikayet: ${appointment.description || "Belirtilmemiş"}
             `;
 
-            const prompt = `Sen bir doktorsun. Aşağıdaki hasta bilgilerine göre olası bir teşhis ve tedavi planı oluştur. 
+            const prompt = `Sen bir doktorsun. Aşağıdaki hasta bilgilerine göre olası bir teşhis ve tedavi planı oluştur.çok uzun olmasın 3-4 satırlı cevaplar yeterlidir. 
             Cevabını şu formatta ver:
             
             Teşhis: [detaylı teşhis]
@@ -183,7 +183,6 @@ const NewExamination = () => {
         )
     }
 
-    handleGenerateAI();
 
     return (
         <div className="container mx-auto py-6 space-y-6">
@@ -194,9 +193,6 @@ const NewExamination = () => {
                         Geri
                     </Button>
                     <h1 className="text-2xl font-bold">Yeni Muayene Kaydı</h1>
-                </div>
-                <div className="space-x-2 flex">
-                    <a onClick={handleGenerateAI}>ee</a>
                 </div>
             </div>
 
