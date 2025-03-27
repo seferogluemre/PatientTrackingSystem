@@ -295,7 +295,7 @@ const SecretaryDashboard = ({ user }: SecretaryDashboardProps) => {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle>Hızlı İşlemler</CardTitle>
-              <CardDescription>Sık kullanılan işlemlere hızl�� erişim</CardDescription>
+              <CardDescription>Sık kullanılan işlemlere hızlı erişim</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

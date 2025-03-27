@@ -33,11 +33,25 @@ export interface Patient {
 
 export interface Doctor {
   id: number;
-  userId: number;
-  specialty: string;
-  clinicId: number;
-  user?: User;
-  clinic?: Clinic;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  dob?: string;
+  birthDate?: string;
+  specialization?: string;
+  tc_no?: string;
+  user_id?: number;
+  specialty?: string;
+  clinic_id?: number;
+  user?: {
+    birthDate?: string;
+    id?: number;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    role?: UserRole;
+  };
 }
 
 export interface Secretary {
@@ -53,6 +67,9 @@ export interface Appointment {
   patient_id: number;
   doctor_id: number;
   appointment_date: Date;
+  appointmentDate?: Date;
+  patientId?: number;
+  doctorId?: number;
   status: AppointmentStatus;
   description?: string;
   patient?: Patient;

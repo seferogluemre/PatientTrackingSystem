@@ -43,6 +43,10 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
     return age;
   };
 
+  // Doğum tarihini belirle: Önce patient.dob'u kontrol et, yoksa patient.birthDate'i dene
+  const birthDate = patient.dob || patient.birthDate || patient.user?.birthDate;
+  const age = calculateAge(birthDate);
+
   return (
     <>
       <div className="bg-white border border-slate-200 rounded-xl shadow-card overflow-hidden transition-all hover:shadow-card-hover card-hover-effect">
@@ -56,7 +60,7 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
                 {patient.first_name} {patient.last_name}
               </h3>
               <p className="text-sm text-slate-500">
-                {patient.user?.birthDate ? `${calculateAge(patient.user.birthDate)} yaşında` : "Yaş bilgisi yok"}
+                {age ? `${age} yaşında` : "Yaş bilgisi yok"}
               </p>
             </div>
           </div>
@@ -65,8 +69,8 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
             <div className="flex items-start gap-2">
               <Calendar className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-slate-600">
-                {patient.user?.birthDate
-                  ? format(new Date(patient.user.birthDate), 'dd MMMM yyyy', { locale: tr })
+                {birthDate
+                  ? format(new Date(birthDate), 'dd MMMM yyyy', { locale: tr })
                   : "Tarih bulunmamaktadır"}
               </p>
             </div>
@@ -74,7 +78,7 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
             {patient.phone && (
               <div className="flex items-start gap-2">
                 <Phone className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-slate-600">{patient.phone ? patient.phone : "Numara bulunmamaktadır"}</p>
+                <p className="text-sm text-slate-600">{patient.phone}</p>
               </div>
             )}
 
@@ -126,7 +130,7 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
                   {patient.first_name} {patient.last_name}
                 </h3>
                 <p className="text-sm text-slate-500">
-                  {calculateAge(patient?.birthDate)} yaşında
+                  {age ? `${age} yaşında` : "Yaş bilgisi yok"}
                 </p>
               </div>
             </div>
@@ -137,7 +141,9 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
                 <div>
                   <p className="text-xs text-slate-500">Doğum Tarihi</p>
                   <p className="text-sm font-medium">
-                    {/* {format(new Date(patient.dob), 'dd MMMM yyyy', { locale: tr })} */}
+                    {birthDate
+                      ? format(new Date(birthDate), 'dd MMMM yyyy', { locale: tr })
+                      : "Tarih bulunmamaktadır"}
                   </p>
                 </div>
               </div>

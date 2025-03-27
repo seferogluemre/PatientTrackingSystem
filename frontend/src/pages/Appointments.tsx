@@ -146,28 +146,24 @@ const Appointments = () => {
             
             return {
               id: appointment.id,
-              patientId: appointment.patient_id,
-              doctorId: appointment.doctor_id,
-              appointmentDate: new Date(appointment.appointment_date),
+              patient_id: appointment.patient_id,
+              doctor_id: appointment.doctor_id,
+              appointment_date: new Date(appointment.appointment_date),
               status: appointment.status,
               description: appointment.description,
               patient: appointment.patient
                 ? {
                   id: appointment.patient.id,
-                  firstName: appointment.patient.first_name,
-                  lastName: appointment.patient.last_name,
+                  first_name: appointment.patient.first_name,
+                  last_name: appointment.patient.last_name,
                   email: appointment.patient.email,
-                  dob: new Date(),
-                  phone: "",
-                  address: "",
+                  tc_no: appointment.patient.tc_no
                 }
                 : undefined,
               doctor: doctor
                 ? {
                   id: doctor.id,
-                  userId: doctor.userId || 0,
                   specialty: doctor.specialty || "",
-                  clinicId: doctor.clinicId || 0,
                   user: {
                     id: doctor.userId || 0,
                     first_name: doctor.user?.first_name || "",

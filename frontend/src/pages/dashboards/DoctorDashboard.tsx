@@ -83,9 +83,12 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
 
               // Format appointments
               const formattedAppointments = doctorAppointments.map((appointment: any) => ({
-                id: appointment.id || Math.random(), // ID yoksa rastgele bir ID oluştur
+                id: appointment.id || Math.random(),
+                patient_id: appointment.patient_id,
                 patientId: appointment.patient_id,
+                doctor_id: appointment.doctor_id,
                 doctorId: appointment.doctor_id,
+                appointment_date: new Date(appointment.appointment_date),
                 appointmentDate: new Date(appointment.appointment_date),
                 status: appointment.completed_at ? "completed" : "pending" as AppointmentStatus,
                 description: appointment.description,
@@ -95,18 +98,19 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                     first_name: appointment.patient.first_name,
                     last_name: appointment.patient.last_name,
                     email: appointment.patient.email,
-                    dob: new Date(),
+                    birthDate: appointment.patient.birthDate,
+                    dob: appointment.patient.birthDate,
                     phone: appointment.patient.phone || "",
                     address: appointment.patient.address || "",
-                    firstName: appointment.patient.first_name, // UI için firstName ve lastName ekle
+                    firstName: appointment.patient.first_name,
                     lastName: appointment.patient.last_name,
                   }
                   : undefined,
                 doctor: {
                   id: currentDoctor.id,
-                  userId: currentDoctor.user_id || 0,
+                  user_id: currentDoctor.user_id || 0,
                   specialty: currentDoctor.specialty || "",
-                  clinicId: currentDoctor.clinic_id || 0,
+                  clinic_id: currentDoctor.clinic_id || 0,
                   user: {
                     id: currentDoctor.user_id || 0,
                     first_name: doctorInfo.first_name,
@@ -137,7 +141,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
               tomorrow.setDate(tomorrow.getDate() + 1)
 
               const todayAppts = formattedAppointments.filter((appointment: Appointment) => {
-                const apptDate = new Date(appointment.appointmentDate)
+                const apptDate = new Date(appointment.appointment_date)
                 return apptDate >= today && apptDate < tomorrow
               })
 
@@ -160,7 +164,8 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                   first_name: patient.first_name,
                   last_name: patient.last_name,
                   email: patient.email,
-                  dob: new Date(patient.birthDate),
+                  birthDate: patient.birthDate,
+                  dob: patient.birthDate,
                   phone: patient.phone || "",
                   address: patient.address || "",
                   user: {
@@ -177,7 +182,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
                 console.log("Formatlanmış hasta verileri:", formattedPatients);
 
                 // Filter patients for this doctor
-                const patientIds = new Set(formattedAppointments.map((appt: Appointment) => appt.patientId))
+                const patientIds = new Set(formattedAppointments.map((appt: Appointment) => appt.patient_id))
                 const doctorPatients = formattedPatients.filter((patient: Patient) => patientIds.has(patient.id))
                 setRecentPatients(doctorPatients.slice(0, 4))
                 console.log("Doktorun hastaları:", doctorPatients);

@@ -63,13 +63,17 @@ const Patients = () => {
   useEffect(() => {
     if (user && (user.role === "doctor" || user.role === "secretary")) {
       const getPatientData = async () => {
-        const patients = await getPatients()
-
-        setPatients(patients)
-      }
-      getPatientData()
+        try {
+          const patients = await getPatients();
+          setPatients(patients);
+        } catch (error) {
+          console.error("Hasta verileri alınırken hata:", error);
+          toast.error("Hasta verileri yüklenirken bir hata oluştu");
+        }
+      };
+      getPatientData();
     }
-  }, [user])
+  }, [user]);
   // Filter patients based on search query
   useEffect(() => {
     if (patients.length) {
