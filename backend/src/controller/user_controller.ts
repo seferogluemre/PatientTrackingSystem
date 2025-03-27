@@ -1,9 +1,9 @@
 import { Request, Response } from 'express'
-import { createUser, deleteUserByTcno, getAllDoctors, getAllPatients, getUserByTcno, updateUserByTcno } from 'src/models/user_model'
+import { UserService } from 'src/models/user_model';
 
 export const addUser = async (req: Request, res: Response): Promise<void> => {
     try {
-        const createdUser = await createUser(req.body);
+        const createdUser = await UserService.create(req.body);
         res.status(201).json({ message: "User Created Successfully", data: createdUser });
     } catch (error) {
         console.error("Error log:", (error as Error).message);
@@ -21,7 +21,7 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
             { message: "tcno not found" }
         }
 
-        const user = await getUserByTcno(tc)
+        const user = await UserService.getByTcno(tc)
         if (user) {
             res.status(200).json({ data: user })
         }
@@ -35,10 +35,9 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
         })
     }
 }
-
 export const getPatients = async (req: Request, res: Response): Promise<void> => {
     try {
-        const patients = await getAllPatients();
+        const patients = await UserService.getPatients();
 
         if (!patients || patients.length === 0) {
             res.status(404).json({ message: "No patients found" });
@@ -57,7 +56,7 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
     try {
         const { tc } = req.params;
 
-        const updatedUser = await updateUserByTcno(tc, req.body);
+        const updatedUser = await UserService.update(tc, req.body);
 
         if (updatedUser) {
             res.status(200).json({ message: "User Updated Successfully", data: updatedUser });
@@ -78,7 +77,7 @@ export const removeUser = async (req: Request, res: Response): Promise<void> => 
             { message: "tcno not found" }
         }
 
-        const removedUser = await deleteUserByTcno(tc)
+        const removedUser = await UserService.delete(tc)
 
         if (removedUser) {
             res.status(200).json({ message: "User Delete Successfully", data: removedUser })
@@ -96,7 +95,7 @@ export const removeUser = async (req: Request, res: Response): Promise<void> => 
 
 export const getDoctors = async (req: Request, res: Response): Promise<void> => {
     try {
-        const doctors = await getAllDoctors();
+        const doctors = await UserService.getDoctors();
         if (!doctors || doctors.length === 0) {
             res.status(404).json({ message: "No doctors found" });
         }

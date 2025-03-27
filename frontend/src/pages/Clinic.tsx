@@ -33,10 +33,8 @@ export default function Clinics() {
         queryKey: ["clinics"],
         queryFn: getClinics
     });
-
-    // Delete clinic mutation
     const deleteMutation = useMutation({
-        mutationFn: (id: string) => deleteClinic(id),
+        mutationFn: (id: string) => deleteClinic(Number(id)),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["clinics"] });
             toast.success("Klinik başarıyla silindi");

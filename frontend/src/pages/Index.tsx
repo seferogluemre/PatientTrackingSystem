@@ -28,7 +28,7 @@ const Index = () => {
   useEffect(() => {
     const token = localStorage.getItem('clinicToken');
     const user = localStorage.getItem('clinicUser');
-    
+
     if (token && user) {
       localStorage.removeItem('clinicToken');
       localStorage.removeItem('clinicUser');

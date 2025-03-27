@@ -36,7 +36,6 @@ export const generateWithGeminiStream = async (
     onChunk: (text: string) => void,
     onComplete: (fullResponse: string) => void
 ) => {
-    const apiKey = "AIzaSyCBGo-OkQ9pVbdbZfork3jZybje9sV3xuk";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key=AIzaSyCBGo-OkQ9pVbdbZfork3jZybje9sV3xuk`;
 
     const requestBody = {

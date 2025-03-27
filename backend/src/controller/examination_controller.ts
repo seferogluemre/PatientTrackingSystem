@@ -1,9 +1,9 @@
 import { Request, Response } from "express"
-import { createExamination, updateExamination, deleteExamination, getExaminationById, getExaminationsByDoctorId, getExaminations } from "src/models/examination_model";
+import { ExaminationService } from "src/models/examination_model";
 
 export const examinationList = async (req: Request, res: Response): Promise<void> => {
     try {
-        const examinations = await getExaminations();
+        const examinations = await ExaminationService.getAll();
 
         if (examinations.length > 0) {
             res.status(200).json({ results: examinations })
@@ -23,7 +23,7 @@ export const examinationList = async (req: Request, res: Response): Promise<void
 
 export const addExamination = async (req: Request, res: Response): Promise<void> => {
     try {
-        const createdExamination = await createExamination(req.body);
+        const createdExamination = await ExaminationService.create(req.body);
 
         res.status(201).json({
             message: "Examination Created Successfully",
@@ -41,7 +41,7 @@ export const editExamination = async (req: Request, res: Response): Promise<void
     try {
         const { id } = req.params;
 
-        const updatedExamination = await updateExamination(Number(id), req.body);
+        const updatedExamination = await ExaminationService.update(Number(id), req.body);
 
         res.status(200).json({
             message: "Examination Updated Successfully",
@@ -65,7 +65,7 @@ export const getExamination = async (req: Request, res: Response): Promise<void>
             });
         }
 
-        const examination = await getExaminationById(Number(id));
+        const examination = await ExaminationService.getById(Number(id));
 
         if (!examination) {
             res.status(404).json({
@@ -95,7 +95,7 @@ export const removeExamination = async (req: Request, res: Response): Promise<vo
             });
         }
 
-        const deletedExamination = await deleteExamination(Number(id));
+        const deletedExamination = await ExaminationService.delete(Number(id));
 
         if (!deletedExamination) {
             res.status(404).json({
@@ -125,7 +125,7 @@ export const getDoctorExaminations = async (req: Request, res: Response): Promis
             });
         }
 
-        const examinations = await getExaminationsByDoctorId(Number(id));
+        const examinations = await ExaminationService.getByDoctorId(Number(id));
 
         res.status(200).json({
             message: "Examinations Retrieved Successfully",

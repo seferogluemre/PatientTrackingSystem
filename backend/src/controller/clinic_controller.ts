@@ -1,8 +1,27 @@
 import { Request, Response } from "express"
-import { createClinic, deleteClinic, getClinicById, getClinics, updateClinic } from "src/models/clinic_model"
+import { ClinicService } from "src/models/clinic_model";
+
+export const listClinics = async (req: Request, res: Response): Promise<void> => {
+    try {
+
+        const clinics = await ClinicService.getAll()
+
+        if (!clinics) {
+            res.status(404).json({ message: "Clinics not found" });
+        }
+
+        res.status(200).json({
+            results: clinics
+        });
+    } catch (error) {
+        console.error("Error log:", (error as Error).message);
+        res.status(500).json({ error: (error as Error).message });
+    }
+}
+
 export const addClinic = async (req: Request, res: Response): Promise<void> => {
     try {
-        const createdClinic = await createClinic(req.body)
+        const createdClinic = await ClinicService.create(req.body)
 
         res.status(201).json({ message: "Clinic Created Successfully", data: createdClinic });
     } catch (error) {
@@ -16,13 +35,13 @@ export const addClinic = async (req: Request, res: Response): Promise<void> => {
 export const editClinic = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const clinicExists = await getClinicById(Number(id))
+        const clinicExists = await ClinicService.getById(Number(id))
 
         if (!clinicExists) {
             res.status(404).json({ message: "Clinic not found" });
         }
 
-        const updatedClinic = await updateClinic(Number(id), req.body)
+        const updatedClinic = await ClinicService.update(Number(id), req.body)
 
         res.status(200).json({
             message: "Clinic updated successfully",
@@ -38,13 +57,13 @@ export const removeClinic = async (req: Request, res: Response): Promise<void> =
     try {
         const { id } = req.params;
 
-        const clinicExists = await getClinicById(Number(id))
+        const clinicExists = await ClinicService.getById(Number(id))
 
         if (!clinicExists) {
             res.status(404).json({ message: "Clinic not found" });
         }
 
-        const deletedClinic = await deleteClinic(Number(id))
+        const deletedClinic = await ClinicService.delete(Number(id))
 
         res.status(200).json({ message: "Clinic deleted successfully", data: deletedClinic });
     } catch (error) {
@@ -57,7 +76,7 @@ export const getClinic = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
 
-        const clinic = await getClinicById(Number(id))
+        const clinic = await ClinicService.getById(Number(id))
 
         if (!clinic) {
             res.status(404).json({ message: "Clinic not found" });
@@ -66,24 +85,6 @@ export const getClinic = async (req: Request, res: Response): Promise<void> => {
         res.status(200).json({
             message: "Clinic fetched successfully",
             data: clinic
-        });
-    } catch (error) {
-        console.error("Error log:", (error as Error).message);
-        res.status(500).json({ error: (error as Error).message });
-    }
-}
-
-export const listClinic = async (req: Request, res: Response): Promise<void> => {
-    try {
-
-        const clinics = await getClinics()
-
-        if (!clinics) {
-            res.status(404).json({ message: "Clinics not found" });
-        }
-
-        res.status(200).json({
-            results: clinics
         });
     } catch (error) {
         console.error("Error log:", (error as Error).message);

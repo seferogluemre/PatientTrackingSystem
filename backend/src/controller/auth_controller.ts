@@ -1,14 +1,13 @@
 import { Request, Response } from "express";
-import { generateToken, logout } from "../models/auth_model";
 import bcrypt from "bcrypt";
-import { getSecretaryByUserTc, userIsValidate } from "src/models/user_model";
-
+import { UserService } from "src/models/user_model";
+import { AuthService } from "src/models/auth_model";
 
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = req.body;
 
-        const user = await userIsValidate(email);
+        const user = await AuthService.validate(email);
 
         if (!user) {
             res.status(401).json({ message: "user not found" });
@@ -19,11 +18,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             res.status(401).json({ message: "invalid login information" });
         }
 
-        const tokens = await generateToken(user.id);
+        const tokens = await AuthService.generateToken(user.id);
 
         const { password: _, ...safeUser } = user;
 
-        const secretary = await getSecretaryByUserTc(user.tc_no);
+        const secretary = await UserService.getSecretaryByTcno(user.tc_no);
         if (secretary) {
             safeUser.id = secretary.id;
         }
@@ -47,7 +46,7 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
         res.status(400).json({ message: "No token provided" });
     }
 
-    await logout(String(token));
+    await AuthService.logout(String(token));
 
     res.json({ message: "Oturum Çıkışınız yapıldı" });
 };

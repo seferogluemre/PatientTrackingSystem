@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyToken } from "../models/auth_model";
+import { AuthService } from "../models/auth_model";
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const token = req.headers.authorization?.split(" ")[1];
@@ -7,7 +7,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { user } = await verifyToken(String(token)) ?? {};
+    const { user } = await AuthService.verifyToken(String(token)) ?? {};
 
 
     if (!user) {
