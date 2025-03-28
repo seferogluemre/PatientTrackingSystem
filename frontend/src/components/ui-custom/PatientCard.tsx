@@ -25,7 +25,7 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
 
   const calculateAge = (dob: string | Date) => {
     if (!dob) return null;
-    
+
     const birthDate = new Date(dob);
     if (isNaN(birthDate.getTime())) {
       console.error("Invalid date:", dob);
@@ -35,11 +35,11 @@ const PatientCard = ({ patient, onViewHistory, onCreateAppointment }: PatientCar
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
+
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
-    
+
     return age;
   };
 

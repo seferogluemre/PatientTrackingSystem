@@ -1,6 +1,7 @@
 export type UserRole = 'doctor' | 'secretary' | 'patient';
 
 export interface User {
+  then(arg0: (data: any) => void): unknown;
   id: number;
   first_name: string;
   last_name: string;

@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound"
 import Examinations from "./pages/Examinations"
 import NewExamination from "./pages/new-examination"
 import Clinics from "./pages/Clinic"
+import UserManagement from "./pages/UserManagement"
 
 const queryClient = new QueryClient()
 
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/examinations" element={<Examinations />} />
             <Route path="/examinations/:id" element={<Examinations />} />
             <Route path="/examinations/new" element={<NewExamination />} />
+            <Route path="/users" element={<UserManagement />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
