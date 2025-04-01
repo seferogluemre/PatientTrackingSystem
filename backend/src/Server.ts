@@ -8,12 +8,19 @@ import auth_routes from './routes/auth_routes'
 import { globalLimiter as rateLimitConfig } from './config/rateLimitConfig'
 import cors from 'cors';
 import { corsOptions } from './config/corsOption'
+import helmet from 'helmet'
+import { httpConfig } from './config/httpConfig'
+import { contentSecurityConfig } from './config/contentSecurityConfig'
 
 const app = express();
 dotenv.config();
 
+app.use(helmet())
+app.use(helmet.contentSecurityPolicy(contentSecurityConfig))
+app.use(helmet.hsts(httpConfig))
 app.use(express.json());
 
+app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 app.use(rateLimitConfig);
 
