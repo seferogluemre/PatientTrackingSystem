@@ -24,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 app.use(rateLimitConfig);
 
+
 app.use('/api/auth', auth_routes)
 app.use('/api/users', user_routes)
 app.use('/api/appointments', appointment_routes)

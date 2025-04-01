@@ -84,16 +84,19 @@ const Navbar = ({ user, onLogout }: NavbarProps) => {
           <div className="flex items-center space-x-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <div className="flex items-center justify-center h-8 w-8 overflow-hidden rounded-full bg-slate-100 hover:ring-2 hover:ring-slate-200 transition-all duration-200">
+                <Button variant="ghost" className="relative  h-14 w-16 rounded-full">
+                  <div className="flex items-center justify-center overflow-hidden rounded-full bg-slate-100 hover:ring-2 hover:ring-slate-200 transition-all duration-200">
                     {user.profilePicture ? (
                       <img
-                        src={user.profilePicture}
+                        src="https://randomuser.me/api/portraits/men/4.jpg"
                         alt={`${user.first_name} ${user.last_name}`}
-                        className="h-full w-full object-cover"
                       />
                     ) : (
-                      <span className="font-medium text-slate-600">{userInitials}</span>
+                      <img
+                        src="https://randomuser.me/api/portraits/men/4.jpg"
+                        alt={`${user.first_name} ${user.last_name}`}
+                        id='user-image'
+                      />
                     )}
                   </div>
                 </Button>
