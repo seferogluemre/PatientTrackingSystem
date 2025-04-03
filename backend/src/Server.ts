@@ -8,14 +8,11 @@ import auth_routes from './routes/auth_routes'
 import { globalLimiter as rateLimitConfig } from './config/rateLimitConfig'
 import cors from 'cors';
 import { corsOptions } from './config/corsOption'
-<<<<<<< HEAD
 import { Server } from 'socket.io'
 import { createServer } from 'node:http'
-=======
 import helmet from 'helmet'
 import { httpConfig } from './config/httpConfig'
 import { contentSecurityConfig } from './config/contentSecurityConfig'
->>>>>>> 4da4a6f7ae8c52c747450e76cc317909371f3673
 
 const app = express();
 const server = createServer(app);

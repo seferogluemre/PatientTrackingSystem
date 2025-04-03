@@ -24,6 +24,7 @@ export class AuthController {
             const { password: _, ...safeUser } = user;
 
             const secretary = await UserService.getSecretaryByTcno(user.tc_no);
+
             if (secretary) {
                 safeUser.id = secretary.id;
             }
