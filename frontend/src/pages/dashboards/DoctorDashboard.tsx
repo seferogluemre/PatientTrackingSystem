@@ -479,33 +479,7 @@ const DoctorDashboard = ({ user }: DoctorDashboardProps) => {
             </CardFooter>
           </Card>
 
-          {/* Son Hastalar */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Son Hastalar</CardTitle>
-                  <CardDescription>Son muayene ettiğiniz hastalar</CardDescription>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/patients")}>
-                  Tümünü Gör
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentPatients.slice(0, 3).map((patient) => (
-                  <PatientCard
-                    key={patient.id}
-                    patient={patient}
-                    onViewHistory={() => navigate(`/patients/${patient.id}`)}
-                    onCreateAppointment={() => navigate(`/appointments/new?patientId=${patient.id}`)}
-                  />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+
         </motion.div>
       </div>
     </motion.div>

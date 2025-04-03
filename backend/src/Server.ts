@@ -8,8 +8,14 @@ import auth_routes from './routes/auth_routes'
 import { globalLimiter as rateLimitConfig } from './config/rateLimitConfig'
 import cors from 'cors';
 import { corsOptions } from './config/corsOption'
+<<<<<<< HEAD
 import { Server } from 'socket.io'
 import { createServer } from 'node:http'
+=======
+import helmet from 'helmet'
+import { httpConfig } from './config/httpConfig'
+import { contentSecurityConfig } from './config/contentSecurityConfig'
+>>>>>>> 4da4a6f7ae8c52c747450e76cc317909371f3673
 
 const app = express();
 const server = createServer(app);
@@ -17,10 +23,15 @@ const io = new Server(server);
 
 dotenv.config();
 
+app.use(helmet())
+app.use(helmet.contentSecurityPolicy(contentSecurityConfig))
+app.use(helmet.hsts(httpConfig))
 app.use(express.json());
 
+app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 app.use(rateLimitConfig);
+
 
 app.use('/api/auth', auth_routes)
 app.use('/api/users', user_routes)

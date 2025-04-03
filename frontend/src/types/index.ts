@@ -25,7 +25,6 @@ export interface Patient {
   email: string;
   phone?: string;
   address?: string;
-  // Aliases for frontend compatibility
   birthDate?: string;
   firstName?: string;
   lastName?: string;
