@@ -12,4 +12,4 @@ Hasta: Randevularını görüntüleyebilir ve yönetebilir.
 Kullanılan Teknolojiler:
 Backend: Express, TypeScript, Prisma ORM, PostgreSQL, AWS RDS, JWT Auth
 Frontend: React, TypeScript, Material UI, Tailwind CSS
-Yapay Zeka Entegrasyonu: Gemini AI
+Yapay Zeka Entegrasyonu: Gemini Ai
